@@ -7,6 +7,16 @@ class SignIn extends StatefulWidget {
 }
 
 class _SignInState extends State<SignIn> {
+  TextEditingController emailController = TextEditingController();
+  TextEditingController passwordController = TextEditingController();
+
+  @override
+  void dispose() {
+    emailController.dispose();
+    passwordController.dispose();
+    super.dispose();
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -29,13 +39,19 @@ class _SignInState extends State<SignIn> {
                               fontSize: 25, fontWeight: FontWeight.w400),
                         )),
                     SizedBox(height: 25),
-                    signInAndSignUpUpTextFields(
-                        context, "Email", false, Icon(Icons.email_outlined)),
+                    SignInAndSignUpTextFormFields(
+                        controller: emailController,
+                        hinttext: "Email",
+                        obscurity: false,
+                        icon: Icon(Icons.email_outlined)),
                     SizedBox(
                       height: 20,
                     ),
-                    signInAndSignUpUpTextFields(context, "Password", true,
-                        Icon(Icons.lock_open_outlined)),
+                    SignInAndSignUpTextFormFields(
+                        controller: passwordController,
+                        hinttext: "Password",
+                        obscurity: true,
+                        icon: Icon(Icons.lock_open_outlined)),
                     SizedBox(height: 20),
                     Align(
                         alignment: Alignment.centerRight,

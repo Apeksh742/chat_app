@@ -7,74 +7,119 @@ class SignUp extends StatefulWidget {
 }
 
 class _SignUpState extends State<SignUp> {
+  bool isLoading = false;
+  final formKey = GlobalKey<FormState>();
+  TextEditingController usernameController = TextEditingController();
+  TextEditingController emailController = TextEditingController();
+  TextEditingController passwordController = TextEditingController();
+
+  validateUserInfo() {
+    if (formKey.currentState.validate()) {
+      setState(() {
+        isLoading = true;
+      });
+    }
+  }
+
+  @override
+  void dispose() {
+    usernameController.dispose();
+    emailController.dispose();
+    passwordController.dispose();
+    super.dispose();
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: appBarMain(context),
-      body: Center(
-            child: SingleChildScrollView(
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Padding(
-                padding: const EdgeInsets.all(20.0),
-                child: Column(
-                  children: [
-                    Align(
-                        alignment: Alignment.centerLeft,
-                        child: Text(
-                          "Sign Up",
-                          style: TextStyle(
-                              fontSize: 25, fontWeight: FontWeight.w400),
-                        )),
-                    SizedBox(height: 25),
-                    signInAndSignUpUpTextFields(
-                        context, "Username", false, Icon(Icons.person_outline)),
-                    SizedBox(height: 20),
-                    signInAndSignUpUpTextFields(
-                        context, "Email", false, Icon(Icons.email_outlined)),
-                    SizedBox(
-                      height: 20,
-                    ),
-                    signInAndSignUpUpTextFields(context, "Password", true,
-                        Icon(Icons.lock_open_outlined)),
-                    SizedBox(
-                      height: 40,
-                    ),
-                    MaterialButton(
-                      onPressed: () {},
-                      elevation: 4,
-                      height: 50,
-                      minWidth: MediaQuery.of(context).size.width * 0.7,
-                      shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(30)),
-                      color: Color(0xff9A88ED),
-                      colorBrightness: Brightness.dark,
-                      child: Text("Sign Up"),
-                    ),
-                    SizedBox(
-                      height: 25,
-                    ),
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.center,
+      body: isLoading
+          ? Container(
+              child: Center(
+              child: CircularProgressIndicator(),
+            ))
+          : Center(
+              child: SingleChildScrollView(
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Padding(
+                    padding: const EdgeInsets.all(20.0),
+                    child: Column(
                       children: [
-                        Text(
-                          "Have an Account?",
-                          style: TextStyle(fontSize: 15),
+                        Align(
+                            alignment: Alignment.centerLeft,
+                            child: Text(
+                              "Sign Up",
+                              style: TextStyle(
+                                  fontSize: 25, fontWeight: FontWeight.w400),
+                            )),
+                        SizedBox(height: 25),
+                        Form(
+                          key: formKey,
+                          child: Column(
+                            children: [
+                              SignInAndSignUpTextFormFields(
+                                  controller: usernameController,
+                                  hinttext: "Username",
+                                  obscurity: false,
+                                  icon: Icon(Icons.person_outline)),
+                              SizedBox(height: 20),
+                              SignInAndSignUpTextFormFields(
+                                  controller: emailController,
+                                  hinttext: "Email",
+                                  obscurity: false,
+                                  icon: Icon(Icons.email_outlined)),
+                              SizedBox(
+                                height: 20,
+                              ),
+                              SignInAndSignUpTextFormFields(
+                                  controller: passwordController,
+                                  hinttext: "Password",
+                                  obscurity: true,
+                                  icon: Icon(Icons.lock_open_outlined)),
+                            ],
+                          ),
                         ),
-                        Text(
-                          " Sign In",
-                          style: TextStyle(color: Color(0xff9A88ED), fontSize: 15),
+                        SizedBox(
+                          height: 40,
                         ),
-
+                        MaterialButton(
+                          onPressed: () {
+                            validateUserInfo();
+                          },
+                          elevation: 4,
+                          height: 50,
+                          minWidth: MediaQuery.of(context).size.width * 0.7,
+                          shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(30)),
+                          color: Color(0xff9A88ED),
+                          colorBrightness: Brightness.dark,
+                          child: Text("Sign Up"),
+                        ),
+                        SizedBox(
+                          height: 25,
+                        ),
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            Text(
+                              "Have an Account?",
+                              style: TextStyle(fontSize: 15),
+                            ),
+                            Text(
+                              " Sign In",
+                              style: TextStyle(
+                                  color: Color(0xff9A88ED), fontSize: 15),
+                            ),
+                          ],
+                        ),
                       ],
                     ),
-                  ],
-                ),
-              )
-            ],
-          ),
-        )),
+                  )
+                ],
+              ),
+            )),
     );
   }
 }
