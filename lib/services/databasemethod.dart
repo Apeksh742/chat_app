@@ -51,6 +51,10 @@ class DatabaseMethods{
     // });
   }
 
+  Stream checkForFirstConversation(String chatRoomId){
+    return FirebaseFirestore.instance.collection("ChatRoom").doc(chatRoomId).collection("chats").limit(1).snapshots();
+  }
+
   
 
   Stream showRecentMessages(String chatRoomId){

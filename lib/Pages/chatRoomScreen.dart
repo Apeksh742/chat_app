@@ -156,12 +156,13 @@ class _ChatRoomState extends State<ChatRoom> {
           child: Container(
         padding: EdgeInsets.all(8),
         child: StreamBuilder(
-            stream: databaseMethods
-                .recentChatsStreams(auth.getCurrentUser().displayName), //TODO: Display users if subcollection chats doesn't exist also which gives error
+            stream: databaseMethods.recentChatsStreams(auth
+                .getCurrentUser()
+                .displayName), //TODO: Display users if subcollection chats doesn't exist also which gives error
             builder: (BuildContext context, AsyncSnapshot snapshot) {
               print(
                   "Stream Builder Recent Chat Users called : ${snapshot.connectionState}");
-              if (snapshot.connectionState == ConnectionState.active ) {
+              if (snapshot.connectionState == ConnectionState.active) {
                 List<QueryDocumentSnapshot> recentChatList = snapshot.data.docs;
                 print("Recent Chat Query Document Snapshot: $recentChatList");
                 print("user_username : ${auth.getCurrentUser().displayName}");
@@ -172,7 +173,6 @@ class _ChatRoomState extends State<ChatRoom> {
                 //    String chatRoomid = recentChatList[i].get('chatRoomId');
                 //    recentChatList[i].
                 // }
-
 
                 // print(data.runtimeType);
                 // recentChatList.
@@ -186,109 +186,119 @@ class _ChatRoomState extends State<ChatRoom> {
                           getUsernamesOfRecentConversations(queryData);
                       chatRoomId = recentChatList[index].get('chatRoomId');
                       print(chatRoomId);
-                      
-                      // bool resultForActiveConversations=false;
-                      // resultForActiveConversations = checkForFirstConversation(chatRoomId);
-                      // print('Output of First Conversation function: ${checkForFirstConversation(chatRoomId)}');
-
-                          
-                                  // return FutureBuilder<Object>(
-                                  //   future: checkForFirstConversation(chatRoomId),
-                                  //   initialData: null,
-                                  //   builder: (context, futuresnapshot) {
-                                  //     if(futuresnapshot.hasData){
-                                  //       print("Future Snapshot data: ${futuresnapshot.data}");
-                                          return InkWell(             //TODO : check if user has chatted
-                                onTap: () {
-                                      print(usernameOfRecentChats);
-                                      Navigator.push(
-                                          context,
-                                          MaterialPageRoute(
-                                              builder: (context) => ConversationScreen(
-                                                    chatRoomId: recentChatList[index]
-                                                        .get('chatRoomId'),
-                                                    receiverName: usernameOfRecentChats,
-                                                  )));
-                                },
-                                child: Padding(
-                                      padding: const EdgeInsets.all(8.0),
-                                      child: Row(children: [
-                                        CircleAvatar(
-                                          backgroundColor:
-                                              Colors.primaries[Random().nextInt(15)],
-                                          child: Icon(Icons.person),
-                                        ),
-                                        SizedBox(width: 10),
-                                        Expanded(
-                                          child: Container(
-                                              child: Column(
-                                            crossAxisAlignment: CrossAxisAlignment.start,
-                                            children: [
-                                              Text(
-                                                "$usernameOfRecentChats" ?? "",
-                                                style: TextStyle(
-                                                    fontSize: 17,
-                                                    fontWeight: FontWeight.w500),
-                                              ),
-                                              StreamBuilder(
-                                                  stream: databaseMethods
-                                                      .showRecentMessages(chatRoomId),
-                                                  builder: (context, newSnapshot) {
-                                                    print("ChatRoom ID: $chatRoomId");
+                      return StreamBuilder(
+                          stream: databaseMethods
+                              .checkForFirstConversation(chatRoomId),
+                          builder: (context, checkorFirstConversationsnapshot) {
+                            if (checkorFirstConversationsnapshot.hasData) {
+                              print(
+                                  "check for first message: ${checkorFirstConversationsnapshot.data.docs.length}");
+                              if (checkorFirstConversationsnapshot
+                                      .data.docs.length !=
+                                  0)
+                                return InkWell(
+                                  //TODO : check if user has chatted
+                                  onTap: () {
+                                    print(usernameOfRecentChats);
+                                    Navigator.push(
+                                        context,
+                                        MaterialPageRoute(
+                                            builder: (context) =>
+                                                ConversationScreen(
+                                                  chatRoomId:
+                                                      recentChatList[index]
+                                                          .get('chatRoomId'),
+                                                  receiverName:
+                                                      usernameOfRecentChats,
+                                                )));
+                                  },
+                                  child: Padding(
+                                    padding: const EdgeInsets.all(8.0),
+                                    child: Row(children: [
+                                      CircleAvatar(
+                                        backgroundColor: Colors
+                                            .primaries[Random().nextInt(15)],
+                                        child: Icon(Icons.person),
+                                      ),
+                                      SizedBox(width: 10),
+                                      Expanded(
+                                        child: Container(
+                                            child: Column(
+                                          crossAxisAlignment:
+                                              CrossAxisAlignment.start,
+                                          children: [
+                                            Text(
+                                              "$usernameOfRecentChats" ?? "",
+                                              style: TextStyle(
+                                                  fontSize: 17,
+                                                  fontWeight: FontWeight.w500),
+                                            ),
+                                            StreamBuilder(
+                                                stream: databaseMethods
+                                                    .showRecentMessages(
+                                                        chatRoomId),
+                                                builder:
+                                                    (context, newSnapshot) {
+                                                  print(
+                                                      "ChatRoom ID: $chatRoomId");
+                                                  print(
+                                                      "Stream Builder Recent Chats called : ${newSnapshot.connectionState}");
+                                                  chatRoomId =
+                                                      recentChatList[index]
+                                                          .get('chatRoomId');
+                                                  if (newSnapshot
+                                                          .connectionState ==
+                                                      ConnectionState.active) {
+                                                    QuerySnapshot documentData =
+                                                        newSnapshot.data;
+                                                    print(documentData
+                                                        .runtimeType);
                                                     print(
-                                                        "Stream Builder Recent Chats called : ${newSnapshot.connectionState}");
-                                                    if (newSnapshot.connectionState == ConnectionState.active ) {
-                                                        
-                                                      QuerySnapshot documentData =
-                                                          newSnapshot.data;
-                                                      print(documentData.runtimeType);
-                                                      print(
-                                                          "Current message : ${documentData.docs.first.get('message')}");
+                                                        "Current message : ${documentData.docs.first.get('message')}");
 
-                                                    //  if (documentData.docs.first != null) {
-                                                       
-                                                      if (documentData.docs.first
-                                                              .get("isPhoto") !=
-                                                          true) {
-                                                        return Text(
-                                                          documentData.docs.first
-                                                                  .get("message") ??
-                                                              '',
-                                                          maxLines: 1,
-                                                        );
-                                                      } else if (documentData.docs.first
-                                                              .get("isPhoto") ==
-                                                          true) {
-                                                        return Row(children: [
-                                                          Icon(
-                                                            Icons.photo,
-                                                            color: Colors.grey,
-                                                          ),
-                                                          Text(" Photo")
-                                                        ]);
-                                                      }
+                                                    if (documentData.docs.first
+                                                            .get("isPhoto") !=
+                                                        true) {
+                                                      return Text(
+                                                        documentData.docs.first
+                                                                .get(
+                                                                    "message") ??
+                                                            '',
+                                                        maxLines: 1,
+                                                      );
+                                                    } else if (documentData
+                                                            .docs.first
+                                                            .get("isPhoto") ==
+                                                        true) {
+                                                      return Row(children: [
+                                                        Icon(
+                                                          Icons.photo,
+                                                          color: Colors.grey,
+                                                        ),
+                                                        Text(" Photo")
+                                                      ]);
+                                                    }
                                                     //  }
-                                                    }
-                                                    {
-                                                      return Container(
-                                                          child: Center(
-                                                        child: CircularProgressIndicator(),
-                                                      ));
-                                                    }
-                                                  })
-                                            ],
-                                          )),
-                                        )
-                                      ]),
-                                ),
-                              );
-                                    //  }
-                                    //  else{
-                                    //    print("Future Snapshot null");
-                                    //    return Container();
-                                    //  }
-                                    // }
-                                  // );
+                                                  }
+                                                  {
+                                                    return Container(
+                                                        child: Center(
+                                                      child:
+                                                          CircularProgressIndicator(),
+                                                    ));
+                                                  }
+                                                })
+                                          ],
+                                        )),
+                                      )
+                                    ]),
+                                  ),
+                                );
+                            } else {
+                              return Container();
+                            }
+                            return Container();
+                          });
                     });
               } else {
                 return Container(
@@ -303,22 +313,27 @@ class _ChatRoomState extends State<ChatRoom> {
 }
 
 Future<bool> checkForFirstConversation(String chatRoomId) async {
-    FirebaseFirestore.instance.collection("ChatRoom").doc(chatRoomId).collection('chats').limit(1).get().
-      then((value) {
-        if(value.docs.isNotEmpty) {
-          print("Length is greater than 0");
-          print(value.docs.first);
-          return true;}
-        else{
-          print("Length < 0");
-          // print(value.docs);
-          return false;
-        }
-      });
-      print("Not returned value");
-      // return null;
+  FirebaseFirestore.instance
+      .collection("ChatRoom")
+      .doc(chatRoomId)
+      .collection('chats')
+      .limit(1)
+      .get()
+      .then((value) {
+    if (value.docs.isNotEmpty) {
+      print("Length is greater than 0");
+      print(value.docs.first);
+      return true;
+    } else {
+      print("Length < 0");
+      // print(value.docs);
       return false;
-  }
+    }
+  });
+  print("Not returned value");
+  // return null;
+  return false;
+}
 
 createChatRoomAndStartConversation(
     String receiverUsername, BuildContext context) {
