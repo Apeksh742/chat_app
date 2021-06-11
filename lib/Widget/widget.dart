@@ -46,6 +46,7 @@ class _SignInAndSignUpTextFormFieldsState extends State<SignInAndSignUpTextFormF
       validator: (value){
         return myValidator(widget.hinttext, value);
       },
+      controller: widget.controller,
       obscureText: widget.obscurity,
       cursorColor: Color(0xff9A88ED),
       decoration: InputDecoration(

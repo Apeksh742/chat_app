@@ -1,14 +1,74 @@
+
+
+import 'package:chat_app/Pages/signup.dart';
 import 'package:chat_app/Widget/widget.dart';
+import 'package:chat_app/services/authMethods.dart';
+import 'package:chat_app/services/databasemethod.dart';
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
+import 'package:flutter/services.dart';
 
 class SignIn extends StatefulWidget {
+  
+
   @override
   _SignInState createState() => _SignInState();
 }
 
 class _SignInState extends State<SignIn> {
+  bool isLoading = false;
   TextEditingController emailController = TextEditingController();
   TextEditingController passwordController = TextEditingController();
+  DatabaseMethods databaseMethods = DatabaseMethods();
+  final formKey = GlobalKey<FormState>();
+
+  signIn() async {
+    if (formKey.currentState.validate()) {
+      final auth = Provider.of<AuthMethods>(context, listen: false);
+      auth
+          .signInWithEmailAndPassword(
+              emailController.text, passwordController.text)
+          .then((value) {
+        if (value == null) {
+          setState(() {
+            isLoading = false;
+          });
+          showDialog(
+              context: context,
+              builder: (BuildContext context) {
+                return AlertDialog(
+                  title: Text(
+                    "Error",
+                    style: TextStyle(color: Colors.red),
+                  ),
+                  content: Text(
+                      "Your email or password was incorrect. Please try again."),
+                  actions: <Widget>[
+                    FlatButton(
+                        color: Color(0xff4081EC),
+                        colorBrightness: Brightness.dark,
+                        onPressed: () {
+                          Navigator.of(context).pop();
+                        },
+                        child: Text("Close"))
+                  ],
+                );
+              });
+        } else {
+          // HelperFunctions.saveUserEmailSharedPreference(emailController.text);
+          //  saveUser() async {
+          //   String username = await databaseMethods.findUserByEmail(emailController.text).then((value) => value.docs[0].data()["Username"]);
+          //   // HelperFunctions.saveUserNameSharedPreference(username);
+          //   print(username);
+          // }
+          // saveUser();
+        }
+      });
+      setState(() {
+        isLoading = true;
+      });
+    }
+  }
 
   @override
   void dispose() {
@@ -39,47 +99,67 @@ class _SignInState extends State<SignIn> {
                               fontSize: 25, fontWeight: FontWeight.w400),
                         )),
                     SizedBox(height: 25),
-                    SignInAndSignUpTextFormFields(
-                        controller: emailController,
-                        hinttext: "Email",
-                        obscurity: false,
-                        icon: Icon(Icons.email_outlined)),
-                    SizedBox(
-                      height: 20,
-                    ),
-                    SignInAndSignUpTextFormFields(
-                        controller: passwordController,
-                        hinttext: "Password",
-                        obscurity: true,
-                        icon: Icon(Icons.lock_open_outlined)),
-                    SizedBox(height: 20),
-                    Align(
-                        alignment: Alignment.centerRight,
-                        child: Text(
-                          "Forgot Password?",
-                          style:
-                              TextStyle(color: Color(0xff9A88ED), fontSize: 15),
-                        )),
-                    SizedBox(
-                      height: 30,
-                    ),
-                    MaterialButton(
-                      onPressed: () {},
-                      elevation: 4,
-                      height: 50,
-                      minWidth: MediaQuery.of(context).size.width * 0.7,
-                      shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(30)),
-                      color: Color(0xff9A88ED),
-                      colorBrightness: Brightness.dark,
-                      child: Text("Sign In"),
+                    Form(
+                      key: formKey,
+                      child: Column(
+                        children: [
+                          SignInAndSignUpTextFormFields(
+                              controller: emailController,
+                              hinttext: "Email",
+                              obscurity: false,
+                              icon: Icon(Icons.email_outlined)),
+                          SizedBox(
+                            height: 20,
+                          ),
+                          SignInAndSignUpTextFormFields(
+                              controller: passwordController,
+                              hinttext: "Password",
+                              obscurity: true,
+                              icon: Icon(Icons.lock_open_outlined)),
+                          SizedBox(height: 20),
+                          Align(
+                              alignment: Alignment.centerRight,
+                              child: Text(
+                                "Forgot Password?",
+                                style: TextStyle(
+                                    color: Color(0xff9A88ED), fontSize: 15),
+                              )),
+                          SizedBox(
+                            height: 30,
+                          ),
+                          MaterialButton(
+                              onPressed: () {
+                                SystemChannels.textInput.invokeMethod('TextInput.hide');
+                                signIn();
+                              },
+                              elevation: 4,
+                              height: 50,
+                              minWidth: MediaQuery.of(context).size.width * 0.7,
+                              shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(30)),
+                              color: Color(0xff9A88ED),
+                              colorBrightness: Brightness.dark,
+                              child: isLoading
+                                  ? CircularProgressIndicator(
+                                      valueColor:
+                                          new AlwaysStoppedAnimation<Color>(
+                                              Colors.white))
+                                  : Text("Sign In")),
+                        ],
+                      ),
                     ),
                     SizedBox(
                       height: 25,
                     ),
-                    Text(
-                      "Don't have an accout?",
-                      style: TextStyle(color: Color(0xff9A88ED), fontSize: 15),
+                    GestureDetector(
+                      onTap: () {
+                        Navigator.pushReplacement(context, MaterialPageRoute(builder: (context) => SignUp()));
+                      },
+                      child: Text(
+                        "Don't have an accout? Register Now ",
+                        style:
+                            TextStyle(color: Color(0xff9A88ED), fontSize: 15),
+                      ),
                     ),
                     SizedBox(height: 20),
                     Row(
