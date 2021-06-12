@@ -32,7 +32,9 @@ class DatabaseMethods{
   }
 
   Future sendMessage(String chatroomId, Map messageMap) async {
-    await FirebaseFirestore.instance.collection("ChatRoom").doc(chatroomId).collection("chats").add(messageMap);
+    await FirebaseFirestore.instance.collection("ChatRoom").doc(chatroomId).collection("chats").add(messageMap).catchError((e){
+      print(e.toString());
+    });
   }
 
   Stream<QuerySnapshot> showMessages(String chatroomId) {
@@ -40,7 +42,9 @@ class DatabaseMethods{
   }
 
   showAllUsers(){
-    FirebaseFirestore.instance.collection("Users").get();
+    FirebaseFirestore.instance.collection("Users").get().catchError((e){
+      print(e.toString());
+    });
   }
 
   Stream<QuerySnapshot>  recentChatsStreams(String username)  {
@@ -52,23 +56,20 @@ class DatabaseMethods{
   }
 
   Stream checkForFirstConversation(String chatRoomId){
-    return FirebaseFirestore.instance.collection("ChatRoom").doc(chatRoomId).collection("chats").limit(1).snapshots();
+    return FirebaseFirestore.instance.collection("ChatRoom").doc(chatRoomId).collection("chats").orderBy("created",descending: true).limit(1).snapshots();
   }
 
   
 
   Stream showRecentMessages(String chatRoomId){
     // Stream empty;
-    // final data = FirebaseFirestore.instance.collection("ChatRoom").doc(chatRoomId).collection("chats").snapshots();
+    // Stream<QuerySnapshot> data = FirebaseFirestore.instance.collection("ChatRoom").doc(chatRoomId).collection("chats").snapshots();
+  
     // if(data!=null)
     return FirebaseFirestore.instance.collection("ChatRoom").doc(chatRoomId).collection("chats").orderBy("created", descending: true).limit(1).snapshots();
   //   else{
   //     return empty;
   //  }
-  }
-
-  Future<int> checkUserHasAnyCoversation(String chatRoomId){
-    return FirebaseFirestore.instance.collection("ChatRoom").doc(chatRoomId).collection('chats').snapshots().length;
   }
 
   Future<QuerySnapshot> getAllUsers(){

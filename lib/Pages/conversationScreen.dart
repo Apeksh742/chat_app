@@ -78,7 +78,7 @@ class _ConversationScreenState extends State<ConversationScreen> {
                   color: Colors.red,
                 ),
                 onPressed: () {
-                  getImage(true);
+                  _showPicker(context);
                 }),
             SizedBox(width: 20),
             Expanded(
@@ -196,6 +196,25 @@ class _ConversationScreenState extends State<ConversationScreen> {
         ));
   }
 
+  void sendMessasge(
+    {BuildContext context, bool isPhoto, String message, String chatRoomId}) {
+  if (isPhoto != true) {
+    isPhoto = false;
+  }
+  if (message.isNotEmpty) {
+    final user = FirebaseAuth.instance.currentUser;
+    Map<String, dynamic> messageMap = {
+      "message": message,
+      "sentBy": user.displayName,
+      "created": FieldValue.serverTimestamp(),
+      "isPhoto": isPhoto,
+      "users": [widget.receiverName,user.displayName]
+    };
+    DatabaseMethods().sendMessage(chatRoomId, messageMap);
+  }
+
+}
+
   Future getImage(bool gallery) async {
     print("SendPhoto Pressed");
 
@@ -222,6 +241,38 @@ class _ConversationScreenState extends State<ConversationScreen> {
     });
     await saveImages(_images);
   }
+
+
+ void _showPicker(context) {
+  showModalBottomSheet(
+      context: context,
+      builder: (BuildContext bc) {
+        return SafeArea(
+          child: Container(
+            child: new Wrap(
+              children: <Widget>[
+                new ListTile(
+                    leading: new Icon(Icons.photo_library),
+                    title: new Text('Gallery'),
+                    onTap: () {
+                      getImage(true);
+                      Navigator.of(context).pop();
+                    }),
+                new ListTile(
+                  leading: new Icon(Icons.photo_camera),
+                  title: new Text('Camera'),
+                  onTap: () {
+                    getImage(false);
+                    Navigator.of(context).pop();
+                  },
+                ),
+              ],
+            ),
+          ),
+        );
+      }
+    );
+}
 
   Future<void> saveImages(List<File> _images) async {
     _images.forEach((image) async {
@@ -306,21 +357,6 @@ class _ConversationScreenState extends State<ConversationScreen> {
   }
 }
 
-void sendMessasge(
-    {BuildContext context, bool isPhoto, String message, String chatRoomId}) {
-  if (isPhoto != true) {
-    isPhoto = false;
-  }
-  if (message.isNotEmpty) {
-    final user = FirebaseAuth.instance.currentUser;
-    Map<String, dynamic> messageMap = {
-      "message": message,
-      "sentBy": user.displayName,
-      "created": FieldValue.serverTimestamp(),
-      "isPhoto": isPhoto
-    };
-    DatabaseMethods().sendMessage(chatRoomId, messageMap);
-  }
-}
+
 
 
