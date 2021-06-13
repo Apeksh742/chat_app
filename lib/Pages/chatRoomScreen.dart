@@ -158,7 +158,7 @@ class _ChatRoomState extends State<ChatRoom> {
         child: StreamBuilder(
             stream: databaseMethods.recentChatsStreams(auth
                 .getCurrentUser()
-                .displayName), //TODO: Display users if subcollection chats doesn't exist also which gives error
+                .displayName), 
             builder: (BuildContext context, AsyncSnapshot snapshot) {
               print(
                   "Stream Builder Recent Chat Users called : ${snapshot.connectionState}");

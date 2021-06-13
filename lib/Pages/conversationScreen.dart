@@ -1,5 +1,6 @@
 import 'dart:io';
 import 'package:cached_network_image/cached_network_image.dart';
+import 'package:chat_app/Pages/previewImage.dart';
 import 'package:chat_app/Pages/tapImage.dart';
 import 'package:flutter/scheduler.dart';
 import 'package:loading_indicator/loading_indicator.dart';
@@ -25,7 +26,7 @@ class ConversationScreen extends StatefulWidget {
 class _ConversationScreenState extends State<ConversationScreen> {
   Stream chatMessageStream;
   String message;
-  List<File> _images = [];
+  File _image ;
   final currentUser = FirebaseAuth.instance.currentUser;
   firebase_storage.FirebaseStorage storageInstance =
       firebase_storage.FirebaseStorage.instance;
@@ -212,10 +213,9 @@ class _ConversationScreenState extends State<ConversationScreen> {
     };
     DatabaseMethods().sendMessage(chatRoomId, messageMap);
   }
-
 }
 
-  Future getImage(bool gallery) async {
+  Future getImage(bool gallery, BuildContext ctx) async {
     print("SendPhoto Pressed");
 
     ImagePicker picker = ImagePicker();
@@ -223,23 +223,28 @@ class _ConversationScreenState extends State<ConversationScreen> {
     // Let user select photo from gallery
     if (gallery) {
       pickedFile =
-          await picker.getImage(source: ImageSource.gallery, imageQuality: 85);
+          await picker.getImage(source: ImageSource.gallery, imageQuality: 70);
+
     }
     // Otherwise open camera to get new photo
     else {
       pickedFile =
-          await picker.getImage(source: ImageSource.camera, imageQuality: 85);
+          await picker.getImage(source: ImageSource.camera, imageQuality: 70);
     }
+    Navigator.push(ctx, MaterialPageRoute(builder: (ctx){
+                        return PreviewPage(file: _image,chatRoomId: widget.chatRoomId,receiverName: widget.receiverName,);
+                      }));
 
     setState(() {
       if (pickedFile != null) {
-        _images.add(File(pickedFile.path));
-        //_image = File(pickedFile.path); // Use if you only need a single picture
+        // _images.add(File(pickedFile.path));
+        _image = File(pickedFile.path); // Use if you only need a single picture
       } else {
         print('No image selected.');
       }
     });
-    await saveImages(_images);
+    
+    // await saveImages(_image);
   }
 
 
@@ -254,16 +259,16 @@ class _ConversationScreenState extends State<ConversationScreen> {
                 new ListTile(
                     leading: new Icon(Icons.photo_library),
                     title: new Text('Gallery'),
-                    onTap: () {
-                      getImage(true);
-                      Navigator.of(context).pop();
+                    onTap: () async{
+                      Navigator.pop(context);
+                      await getImage(true,context);
                     }),
                 new ListTile(
                   leading: new Icon(Icons.photo_camera),
                   title: new Text('Camera'),
-                  onTap: () {
-                    getImage(false);
-                    Navigator.of(context).pop();
+                  onTap: () async{
+                   Navigator.pop(context);
+                   await getImage(false,context);
                   },
                 ),
               ],
@@ -272,14 +277,15 @@ class _ConversationScreenState extends State<ConversationScreen> {
         );
       }
     );
+    
 }
-
+  
   Future<void> saveImages(List<File> _images) async {
     _images.forEach((image) async {
-      String imageURL = await uploadFile(image);
-      sendMessasge(message: imageURL, chatRoomId: widget.chatRoomId, isPhoto: true
-          // context, message, chatRoomId
-          );
+      // String imageURL = await uploadFile(image);
+      // sendMessasge(message: imageURL, chatRoomId: widget.chatRoomId, isPhoto: true
+      //     // context, message, chatRoomId
+      //     );
     });
   }
 
@@ -297,6 +303,7 @@ class _ConversationScreenState extends State<ConversationScreen> {
     });
     return downloadURL;
   }
+
 
   @override
   Widget build(BuildContext context) {
