@@ -23,19 +23,21 @@ environment:
 dependencies:
   flutter:
     sdk: flutter
+  cached_network_image: 
   cloud_firestore: 
   cupertino_icons: 
   firebase_auth: 
+  firebase_core: 
+  firebase_messaging: 
+  flutter_local_notifications: 
   firebase_database: 
+  firebase_storage: 
   google_fonts: 
+  image_picker: 
   intl: 
+  loading_indicator: 
   provider: 
   shared_preferences: 
-  image_picker:
-  cached_network_image:
-  loading_indicator:
-  firebase_storage: 
-  
 
 dev_dependencies:
   flutter_test:

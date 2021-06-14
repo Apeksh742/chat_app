@@ -68,12 +68,13 @@ class _ConversationScreenState extends State<ConversationScreen> {
   Widget buildMessageComposer(BuildContext context,
       TextEditingController controller, String message, String chatRoomId) {
     return Container(
-        height: 70,
         padding: EdgeInsets.symmetric(horizontal: 10, vertical: 10),
-        decoration: BoxDecoration(color: Colors.white),
+        decoration: BoxDecoration(color: Colors.white,
+        ),
         child: Row(
           children: [
             IconButton(
+              tooltip: "Send image",
                 icon: Icon(
                   Icons.photo,
                   color: Colors.red,
@@ -90,13 +91,13 @@ class _ConversationScreenState extends State<ConversationScreen> {
                   print(message);
                   sendMessasge(
                       context: context, message: message, chatRoomId: chatRoomId
-                      // context, message, chatRoomId
                       );
                   controller.clear();
                   SystemChannels.textInput.invokeMethod('TextInput.hide');
                 }
               },
               controller: controller,
+              minLines: 1,
               maxLines: 3,
               textCapitalization: TextCapitalization.sentences,
               keyboardType: TextInputType.text,
@@ -137,8 +138,8 @@ class _ConversationScreenState extends State<ConversationScreen> {
         },
         child: Container(
           constraints: BoxConstraints(
-            maxWidth: MediaQuery.of(context).size.width * 0.75,
-            maxHeight:  MediaQuery.of(context).size.height * 0.3,
+            maxWidth: MediaQuery.of(context).size.width * 0.8,
+            maxHeight:  MediaQuery.of(context).size.height * 0.25,
           ),
           margin: EdgeInsetsDirectional.all(5.0),
           decoration: BoxDecoration(
@@ -187,14 +188,16 @@ class _ConversationScreenState extends State<ConversationScreen> {
                     bottomRight: Radius.circular(10))),
         padding: EdgeInsets.all(16),
         margin: EdgeInsets.all(5),
-        child: Text(
+        child: SelectableText(
           querySnapshot[index].get('message'),
           style: TextStyle(
               color: sentBy == currentUser.displayName
                   ? Colors.white
                   : Colors.black,
               fontWeight: FontWeight.w400),
-        ));
+              cursorColor: Colors.yellow,
+        )
+        );
   }
 
   void sendMessasge(
@@ -231,20 +234,21 @@ class _ConversationScreenState extends State<ConversationScreen> {
       pickedFile =
           await picker.getImage(source: ImageSource.camera, imageQuality: 70);
     }
-    Navigator.push(ctx, MaterialPageRoute(builder: (ctx){
-                        return PreviewPage(file: _image,chatRoomId: widget.chatRoomId,receiverName: widget.receiverName,);
-                      }));
+    
 
     setState(() {
       if (pickedFile != null) {
         // _images.add(File(pickedFile.path));
-        _image = File(pickedFile.path); // Use if you only need a single picture
+        _image = File(pickedFile.path);  // Use if you only need a single picture
+        Navigator.push(ctx, MaterialPageRoute(builder: (ctx){
+                        return PreviewPage(file: _image,chatRoomId: widget.chatRoomId,receiverName: widget.receiverName,);
+                      }));
       } else {
         print('No image selected.');
+     
       }
     });
-    
-    // await saveImages(_image);
+
   }
 
 
@@ -280,29 +284,6 @@ class _ConversationScreenState extends State<ConversationScreen> {
     
 }
   
-  Future<void> saveImages(List<File> _images) async {
-    _images.forEach((image) async {
-      // String imageURL = await uploadFile(image);
-      // sendMessasge(message: imageURL, chatRoomId: widget.chatRoomId, isPhoto: true
-      //     // context, message, chatRoomId
-      //     );
-    });
-  }
-
-  Future<String> uploadFile(File _image) async {
-    String downloadURL;
-    firebase_storage.Reference storageReference =
-        storageInstance.ref().child('uploads/${basename(_image.path)}');
-    firebase_storage.UploadTask uploadTask = storageReference.putFile(_image);
-    await uploadTask.then((_) {
-      print('File Uploaded');
-    });
-    // String returnURL;
-    await storageReference.getDownloadURL().then((fileURL) {
-      downloadURL = fileURL;
-    });
-    return downloadURL;
-  }
 
 
   @override
@@ -311,7 +292,6 @@ class _ConversationScreenState extends State<ConversationScreen> {
       appBar: AppBar(
         title: Text(widget.receiverName),
         actions: [
-          IconButton(icon: Icon(Icons.call), onPressed: () {}),
           IconButton(
               icon: Icon(
                 Icons.more_vert,
@@ -337,6 +317,7 @@ class _ConversationScreenState extends State<ConversationScreen> {
                       return ListView.builder(
                         controller: scrollController,
                         itemCount: myQueryList.length,
+                        reverse: true,
                         itemBuilder: (BuildContext context, int index) {
                           String sentBy = myQueryList[index].get("sentBy");
                           return Align(
