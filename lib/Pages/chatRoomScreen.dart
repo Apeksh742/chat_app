@@ -156,9 +156,8 @@ class _ChatRoomState extends State<ChatRoom> {
           child: Container(
         padding: EdgeInsets.all(8),
         child: StreamBuilder(
-            stream: databaseMethods.recentChatsStreams(auth
-                .getCurrentUser()
-                .displayName), 
+            stream: databaseMethods
+                .recentChatsStreams(auth.getCurrentUser().displayName),
             builder: (BuildContext context, AsyncSnapshot snapshot) {
               print(
                   "Stream Builder Recent Chat Users called : ${snapshot.connectionState}");

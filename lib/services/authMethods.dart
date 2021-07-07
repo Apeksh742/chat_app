@@ -69,7 +69,7 @@ class AuthMethods {
   }
 
   Future<void> updateUser(User user, String username) async {
-    await user.updateDisplayName(username);
+    await user.updateProfile(displayName: username);
     _auth.currentUser.reload();
   }
 

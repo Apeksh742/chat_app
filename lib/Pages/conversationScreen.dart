@@ -2,9 +2,8 @@ import 'dart:io';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:chat_app/Pages/previewImage.dart';
 import 'package:chat_app/Pages/tapImage.dart';
-import 'package:flutter/scheduler.dart';
+import 'package:intl/intl.dart';
 import 'package:loading_indicator/loading_indicator.dart';
-import 'package:path/path.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:chat_app/services/databasemethod.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
@@ -26,7 +25,7 @@ class ConversationScreen extends StatefulWidget {
 class _ConversationScreenState extends State<ConversationScreen> {
   Stream chatMessageStream;
   String message;
-  File _image ;
+  File _image;
   final currentUser = FirebaseAuth.instance.currentUser;
   firebase_storage.FirebaseStorage storageInstance =
       firebase_storage.FirebaseStorage.instance;
@@ -34,47 +33,33 @@ class _ConversationScreenState extends State<ConversationScreen> {
 
   TextEditingController messageController = TextEditingController();
   DatabaseMethods databaseMethods = DatabaseMethods();
-  ScrollController scrollController = ScrollController();
-
-  @override
-  void initState() {
-    super.initState();
-    //   WidgetsBinding.instance.addPostFrameCallback((_) {
-    //                              scrollController.animateTo(
-    // scrollController.position.maxScrollExtent,
-    // duration: Duration(seconds: 1),
-    // curve: Curves.fastOutSlowIn,
-    // );
-    
-
-    //    });
-    // if (scrollController.hasClients) {
-    //   scrollController.animateTo(scrollController.position.maxScrollExtent,
-    //       duration: Duration(seconds: 1), curve: Curves.fastOutSlowIn);
-    //   // Future.delayed(Duration(milliseconds: 50), () {
-    //   //   scrollController?.jumpTo(scrollController.position.maxScrollExtent);
-    //   // });
-    // }
-    
-  }
 
   @override
   void dispose() {
     super.dispose();
     messageController.dispose();
-    scrollController.dispose();
   }
+
+  // Future getTimestamp(QueryDocumentSnapshot querySnapshot){
+  //     Timestamp myTimeStamp = querySnapshot.get('created');
+  //     // DateTime myDateTime =  myTimeStamp.toDate() ;
+  //     // String formattedTime = DateFormat.jm().format(myDateTime);
+  //     // String currentTime = DateFormat.jm().format(DateTime.now());
+  //     // print(formattedTime);
+  //   return Future.value(DateFormat.jm().format(myTimeStamp.toDate()));
+  // }
 
   Widget buildMessageComposer(BuildContext context,
       TextEditingController controller, String message, String chatRoomId) {
     return Container(
         padding: EdgeInsets.symmetric(horizontal: 10, vertical: 10),
-        decoration: BoxDecoration(color: Colors.white,
+        decoration: BoxDecoration(
+          color: Colors.white,
         ),
         child: Row(
           children: [
             IconButton(
-              tooltip: "Send image",
+                tooltip: "Send image",
                 icon: Icon(
                   Icons.photo,
                   color: Colors.red,
@@ -90,8 +75,9 @@ class _ConversationScreenState extends State<ConversationScreen> {
                   message = controller.text;
                   print(message);
                   sendMessasge(
-                      context: context, message: message, chatRoomId: chatRoomId
-                      );
+                      context: context,
+                      message: message,
+                      chatRoomId: chatRoomId);
                   controller.clear();
                   SystemChannels.textInput.invokeMethod('TextInput.hide');
                 }
@@ -128,50 +114,55 @@ class _ConversationScreenState extends State<ConversationScreen> {
 
   Widget textOrImageBox(List<QueryDocumentSnapshot> querySnapshot, int index,
       BuildContext context, String sentBy) {
+    Timestamp myTimeStamp = querySnapshot[index].get('created');
+    print("My Timestamp: $myTimeStamp");
+    DateTime myDateTime = myTimeStamp?.toDate();
+    print("MydateTime: $myDateTime");
+    String formattedTime = DateFormat.jm().format(myDateTime ?? DateTime.now());
+    // String currentTime = DateFormat.jm().format(DateTime.now());
+    // print(formattedTime);
     if (querySnapshot[index].get("isPhoto") == true) {
       return GestureDetector(
-        onTap: (){
-          Navigator.push(context, MaterialPageRoute(builder: (context){
+        onTap: () {
+          Navigator.push(context, MaterialPageRoute(builder: (context) {
             print("Button Pressed");
-            return TapImage(downloadUrl: querySnapshot[index].get('message'),);
+            return TapImage(
+              downloadUrl: querySnapshot[index].get('message'),
+            );
           }));
         },
         child: Container(
-          constraints: BoxConstraints(
-            maxWidth: MediaQuery.of(context).size.width * 0.8,
-            maxHeight:  MediaQuery.of(context).size.height * 0.25,
-          ),
-          margin: EdgeInsetsDirectional.all(5.0),
-          decoration: BoxDecoration(
-            color: sentBy == currentUser.displayName
-                  ? Color(0xff4D94FF)
-                  : Color(0xffE5E9F0),
-              borderRadius: sentBy == currentUser.displayName
-                  ? BorderRadius.only(
-                      topLeft: Radius.circular(10),
-                      bottomLeft: Radius.circular(10))
-                  : BorderRadius.only(
-                      topRight: Radius.circular(10),
-                      bottomRight: Radius.circular(10))
-          ),
-          child: Container(
-            padding: EdgeInsetsDirectional.all(5),
-            child: CachedNetworkImage(
-                              placeholder: (context, url) => Container(
-                                  height: 100,
-                                  width: 100,
-                                  child: Center(
-                                      child: LoadingIndicator(
-                                    indicatorType: Indicator.circleStrokeSpin,
-                                    color: Colors.green,
-                                  ))),
-                              imageUrl: querySnapshot[index].get('message')
-                            ),
-          )
-        ),
+            constraints: BoxConstraints(
+              maxWidth: MediaQuery.of(context).size.width * 0.8,
+              maxHeight: MediaQuery.of(context).size.height * 0.25,
+            ),
+            margin: EdgeInsets.all(5.0),
+            decoration: BoxDecoration(
+                color: sentBy == currentUser.displayName
+                    ? Color(0xff4D94FF)
+                    : Color(0xffE5E9F0),
+                borderRadius: sentBy == currentUser.displayName
+                    ? BorderRadius.only(
+                        topLeft: Radius.circular(10),
+                        bottomLeft: Radius.circular(10))
+                    : BorderRadius.only(
+                        topRight: Radius.circular(10),
+                        bottomRight: Radius.circular(10))),
+            child: Container(
+              padding: EdgeInsets.all(5),
+              child: CachedNetworkImage(
+                  placeholder: (context, url) => Container(
+                      height: 100,
+                      width: 100,
+                      child: Center(
+                          child: LoadingIndicator(
+                        indicatorType: Indicator.circleStrokeSpin,
+                        color: Colors.green,
+                      ))),
+                  imageUrl: querySnapshot[index].get('message')),
+            )),
       );
     }
-
     return Container(
         constraints:
             BoxConstraints(maxWidth: MediaQuery.of(context).size.width * 0.75),
@@ -188,35 +179,62 @@ class _ConversationScreenState extends State<ConversationScreen> {
                     bottomRight: Radius.circular(10))),
         padding: EdgeInsets.all(16),
         margin: EdgeInsets.all(5),
-        child: SelectableText(
-          querySnapshot[index].get('message'),
-          style: TextStyle(
-              color: sentBy == currentUser.displayName
-                  ? Colors.white
-                  : Colors.black,
-              fontWeight: FontWeight.w400),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.end,
+          children: [
+            SelectableText(
+              querySnapshot[index].get('message'),
+              style: TextStyle(
+                  color: sentBy == currentUser.displayName
+                      ? Colors.white
+                      : Colors.black,
+                  fontWeight: FontWeight.w400),
               cursorColor: Colors.yellow,
-        )
-        );
+            ),
+            SizedBox(height: MediaQuery.of(context).size.height * 0.009),
+            Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                SizedBox(width: MediaQuery.of(context).size.width * 0.02),
+                Text(formattedTime ?? "",
+                    style: TextStyle(color: Colors.black, fontSize: 10)),
+              ],
+            )
+            // FutureBuilder(
+            //   future: getTimestamp(querySnapshot[index]),
+            //   builder: (BuildContext context, AsyncSnapshot snapshot) {̥
+            //     if(snapshot.hasData){
+            //       print("Future Builder Snapshot Data: ${snapshot.data}");
+            //       return Container(child: Text("${snapshot.data}"));
+            //     }
+            //     else{
+            //       return Container();
+            //     }
+            //   },
+            // ),
+          ],
+        ));
   }
 
   void sendMessasge(
-    {BuildContext context, bool isPhoto, String message, String chatRoomId}) {
-  if (isPhoto != true) {
-    isPhoto = false;
+      {BuildContext context, bool isPhoto, String message, String chatRoomId}) {
+    if (isPhoto != true) {
+      isPhoto = false;
+    }
+    if (message.isNotEmpty) {
+      final user = FirebaseAuth.instance.currentUser;
+      // String timestamp = FieldValue.serverTimestamp().toString();
+
+      Map<String, dynamic> messageMap = {
+        "message": message,
+        "sentBy": user.displayName,
+        "created": FieldValue.serverTimestamp(),
+        "isPhoto": isPhoto,
+        "users": [widget.receiverName, user.displayName]
+      };
+      DatabaseMethods().sendMessage(chatRoomId, messageMap);
+    }
   }
-  if (message.isNotEmpty) {
-    final user = FirebaseAuth.instance.currentUser;
-    Map<String, dynamic> messageMap = {
-      "message": message,
-      "sentBy": user.displayName,
-      "created": FieldValue.serverTimestamp(),
-      "isPhoto": isPhoto,
-      "users": [widget.receiverName,user.displayName]
-    };
-    DatabaseMethods().sendMessage(chatRoomId, messageMap);
-  }
-}
 
   Future getImage(bool gallery, BuildContext ctx) async {
     print("SendPhoto Pressed");
@@ -227,64 +245,59 @@ class _ConversationScreenState extends State<ConversationScreen> {
     if (gallery) {
       pickedFile =
           await picker.getImage(source: ImageSource.gallery, imageQuality: 70);
-
     }
     // Otherwise open camera to get new photo
     else {
       pickedFile =
           await picker.getImage(source: ImageSource.camera, imageQuality: 70);
     }
-    
 
     setState(() {
       if (pickedFile != null) {
         // _images.add(File(pickedFile.path));
-        _image = File(pickedFile.path);  // Use if you only need a single picture
-        Navigator.push(ctx, MaterialPageRoute(builder: (ctx){
-                        return PreviewPage(file: _image,chatRoomId: widget.chatRoomId,receiverName: widget.receiverName,);
-                      }));
+        _image = File(pickedFile.path); // Use if you only need a single picture
+        Navigator.push(ctx, MaterialPageRoute(builder: (ctx) {
+          return PreviewPage(
+            file: _image,
+            chatRoomId: widget.chatRoomId,
+            receiverName: widget.receiverName,
+          );
+        }));
       } else {
         print('No image selected.');
-     
       }
     });
-
   }
 
-
- void _showPicker(context) {
-  showModalBottomSheet(
-      context: context,
-      builder: (BuildContext bc) {
-        return SafeArea(
-          child: Container(
-            child: new Wrap(
-              children: <Widget>[
-                new ListTile(
-                    leading: new Icon(Icons.photo_library),
-                    title: new Text('Gallery'),
-                    onTap: () async{
+  void _showPicker(context) {
+    showModalBottomSheet(
+        context: context,
+        builder: (BuildContext bc) {
+          return SafeArea(
+            child: Container(
+              child: new Wrap(
+                children: <Widget>[
+                  new ListTile(
+                      leading: new Icon(Icons.photo_library),
+                      title: new Text('Gallery'),
+                      onTap: () async {
+                        Navigator.pop(context);
+                        await getImage(true, context);
+                      }),
+                  new ListTile(
+                    leading: new Icon(Icons.photo_camera),
+                    title: new Text('Camera'),
+                    onTap: () async {
                       Navigator.pop(context);
-                      await getImage(true,context);
-                    }),
-                new ListTile(
-                  leading: new Icon(Icons.photo_camera),
-                  title: new Text('Camera'),
-                  onTap: () async{
-                   Navigator.pop(context);
-                   await getImage(false,context);
-                  },
-                ),
-              ],
+                      await getImage(false, context);
+                    },
+                  ),
+                ],
+              ),
             ),
-          ),
-        );
-      }
-    );
-    
-}
-  
-
+          );
+        });
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -302,6 +315,7 @@ class _ConversationScreenState extends State<ConversationScreen> {
       body: GestureDetector(
         onTap: () {
           SystemChannels.textInput.invokeMethod('TextInput.hide');
+          FocusManager.instance.primaryFocus?.unfocus();
         },
         child: Column(
           children: [
@@ -311,11 +325,10 @@ class _ConversationScreenState extends State<ConversationScreen> {
               child: StreamBuilder(
                   stream: DatabaseMethods().showMessages(widget.chatRoomId),
                   builder: (context, snapshot) {
-                    if (snapshot.connectionState == ConnectionState.active) {
+                    if (snapshot.hasData) {
                       List<QueryDocumentSnapshot> myQueryList =
                           snapshot.data.docs;
                       return ListView.builder(
-                        controller: scrollController,
                         itemCount: myQueryList.length,
                         reverse: true,
                         itemBuilder: (BuildContext context, int index) {
@@ -325,7 +338,11 @@ class _ConversationScreenState extends State<ConversationScreen> {
                                 ? Alignment.centerRight
                                 : Alignment.centerLeft,
                             child: textOrImageBox(
-                                myQueryList, index, context, sentBy),
+                              myQueryList,
+                              index,
+                              context,
+                              sentBy,
+                            ),
                           );
                         },
                       );
@@ -344,7 +361,3 @@ class _ConversationScreenState extends State<ConversationScreen> {
     );
   }
 }
-
-
-
-
