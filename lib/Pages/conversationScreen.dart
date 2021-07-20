@@ -1,3 +1,4 @@
+import 'dart:developer';
 import 'dart:io';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:chat_app/Pages/previewImage.dart';
@@ -40,15 +41,6 @@ class _ConversationScreenState extends State<ConversationScreen> {
     messageController.dispose();
   }
 
-  // Future getTimestamp(QueryDocumentSnapshot querySnapshot){
-  //     Timestamp myTimeStamp = querySnapshot.get('created');
-  //     // DateTime myDateTime =  myTimeStamp.toDate() ;
-  //     // String formattedTime = DateFormat.jm().format(myDateTime);
-  //     // String currentTime = DateFormat.jm().format(DateTime.now());
-  //     // print(formattedTime);
-  //   return Future.value(DateFormat.jm().format(myTimeStamp.toDate()));
-  // }
-
   Widget buildMessageComposer(BuildContext context,
       TextEditingController controller, String message, String chatRoomId) {
     return Container(
@@ -73,7 +65,7 @@ class _ConversationScreenState extends State<ConversationScreen> {
               onSubmitted: (_) {
                 if (controller.text.isNotEmpty) {
                   message = controller.text;
-                  print(message);
+                  // print(message);
                   sendMessasge(
                       context: context,
                       message: message,
@@ -97,7 +89,7 @@ class _ConversationScreenState extends State<ConversationScreen> {
                 onPressed: () {
                   if (controller.text.isNotEmpty) {
                     message = controller.text;
-                    print(message);
+                    // print(message);
                     sendMessasge(
                         context: context,
                         message: message,
@@ -115,9 +107,9 @@ class _ConversationScreenState extends State<ConversationScreen> {
   Widget textOrImageBox(List<QueryDocumentSnapshot> querySnapshot, int index,
       BuildContext context, String sentBy) {
     Timestamp myTimeStamp = querySnapshot[index].get('created');
-    print("My Timestamp: $myTimeStamp");
+    // print("My Timestamp: $myTimeStamp");
     DateTime myDateTime = myTimeStamp?.toDate();
-    print("MydateTime: $myDateTime");
+    // print("MydateTime: $myDateTime");
     String formattedTime = DateFormat.jm().format(myDateTime ?? DateTime.now());
     // String currentTime = DateFormat.jm().format(DateTime.now());
     // print(formattedTime);
@@ -303,7 +295,34 @@ class _ConversationScreenState extends State<ConversationScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text(widget.receiverName),
+        title: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(widget.receiverName),
+            StreamBuilder<QuerySnapshot>(
+              stream: databaseMethods.checkUserStatus(widget.receiverName),
+              builder: (BuildContext context,
+                  AsyncSnapshot<QuerySnapshot> snapshot) {
+                if (snapshot.hasData) {
+                  bool status = snapshot.data.docs.first.get("status");
+                  // print();
+                  // Map<String, dynamic> data = snapshot.data;
+                  // bool status = data["status"];
+                  return Container(
+                      child: status
+                          ? Text(
+                              "Online",
+                              style: TextStyle(fontSize: 12),
+                            )
+                          : Text("Offline", style: TextStyle(fontSize: 12)));
+                } else {
+                  return Container();
+                }
+              },
+            ),
+          ],
+        ),
         actions: [
           IconButton(
               icon: Icon(
@@ -329,23 +348,81 @@ class _ConversationScreenState extends State<ConversationScreen> {
                       List<QueryDocumentSnapshot> myQueryList =
                           snapshot.data.docs;
                       return ListView.builder(
-                        itemCount: myQueryList.length,
-                        reverse: true,
-                        itemBuilder: (BuildContext context, int index) {
-                          String sentBy = myQueryList[index].get("sentBy");
-                          return Align(
-                            alignment: sentBy == currentUser.displayName
-                                ? Alignment.centerRight
-                                : Alignment.centerLeft,
-                            child: textOrImageBox(
-                              myQueryList,
-                              index,
-                              context,
-                              sentBy,
-                            ),
-                          );
-                        },
-                      );
+                          itemCount: myQueryList.length,
+                          reverse: true,
+                          itemBuilder: (BuildContext context, int index) {
+                            String sentBy = myQueryList[index].get("sentBy");
+                            Timestamp myTimeStamp =
+                                myQueryList[index].get('created');
+                            DateTime myDateTime = myTimeStamp?.toDate();
+                            String formattedTime = DateFormat('dd-MM-yyyy')
+                                .format(myDateTime ?? DateTime.now());
+                            int todayCount = 0;
+                            if (formattedTime.substring(0, 2) ==
+                                DateFormat('dd-MM-yyyy')
+                                    .format(DateTime.now())
+                                    .substring(0, 2)) {
+                              todayCount++;
+                              log(todayCount.toString());
+                              return Column(
+                                children: [
+                                  todayCount == 1
+                                      ? Center(child: Text("Today"))
+                                      : Container(),
+                                  Align(
+                                    alignment: sentBy == currentUser.displayName
+                                        ? Alignment.centerRight
+                                        : Alignment.centerLeft,
+                                    child: textOrImageBox(
+                                      myQueryList,
+                                      index,
+                                      context,
+                                      sentBy,
+                                    ),
+                                  )
+                                ],
+                              );
+                            } else if (int.parse(
+                                    formattedTime.substring(0, 2)) ==
+                                int.parse(DateFormat('dd-MM-yyyy')
+                                        .format(DateTime.now())
+                                        .substring(0, 2)) -
+                                    1)
+                              return Column(
+                                children: [
+                                  Center(child: Text("Yesterday")),
+                                  Align(
+                                    alignment: sentBy == currentUser.displayName
+                                        ? Alignment.centerRight
+                                        : Alignment.centerLeft,
+                                    child: textOrImageBox(
+                                      myQueryList,
+                                      index,
+                                      context,
+                                      sentBy,
+                                    ),
+                                  )
+                                ],
+                              );
+                            else {
+                              return Column(
+                                children: [
+                                  Center(child: Text(formattedTime)),
+                                  Align(
+                                    alignment: sentBy == currentUser.displayName
+                                        ? Alignment.centerRight
+                                        : Alignment.centerLeft,
+                                    child: textOrImageBox(
+                                      myQueryList,
+                                      index,
+                                      context,
+                                      sentBy,
+                                    ),
+                                  )
+                                ],
+                              );
+                            }
+                          });
                     }
                     return Container();
                   }),

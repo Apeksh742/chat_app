@@ -26,17 +26,18 @@ class _SignUpState extends State<SignUp> {
       final auth = Provider.of<AuthMethods>(context, listen: false);
       try {
         auth
-            .signUpWithEmailAndPassword(emailController.text,
-                passwordController.text)
+            .signUpWithEmailAndPassword(
+                emailController.text, passwordController.text)
             .then((user) {
           // user.updateProfile(displayName: usernameCfluontroller.text);
           user.updateDisplayName(usernameController.text);
           user.reload();
-          
-          Map<String, String> userInfo = {
+
+          Map<String, dynamic> userInfo = {
             "Username": usernameController.text,
             "Email": user.email,
-            "uid": user.uid
+            "uid": user.uid,
+            "status": true,
           };
           print("Firebase Username updated : ${user.displayName}");
           database.uploadData(userInfo);
@@ -138,7 +139,10 @@ class _SignUpState extends State<SignUp> {
                       ),
                       GestureDetector(
                         onTap: () {
-                           Navigator.pushReplacement(context, MaterialPageRoute(builder: (context) => SignIn()));
+                          Navigator.pushReplacement(
+                              context,
+                              MaterialPageRoute(
+                                  builder: (context) => SignIn()));
                         },
                         child: Text(
                           " Sign In",

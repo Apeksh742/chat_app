@@ -1,4 +1,6 @@
+import 'dart:developer' as developerlog;
 import 'dart:math';
+
 import 'package:chat_app/Pages/conversationScreen.dart';
 import 'package:chat_app/Pages/searchUser.dart';
 import 'package:chat_app/modal/user.dart';
@@ -16,16 +18,34 @@ class ChatRoom extends StatefulWidget {
   _ChatRoomState createState() => _ChatRoomState();
 }
 
-class _ChatRoomState extends State<ChatRoom> {
+class _ChatRoomState extends State<ChatRoom> with WidgetsBindingObserver {
   DatabaseMethods databaseMethods = DatabaseMethods();
-  final currentUser = FirebaseAuth.instance.currentUser;
+  User currentUser = FirebaseAuth.instance.currentUser;
   List<String> myusers = []; //List of all users which help while serching users
   @override
   void initState() {
     super.initState();
+    setState(() {
+      currentUser = FirebaseAuth.instance.currentUser;
+    });
+    WidgetsBinding.instance.addObserver(this);
     print("initState called");
     print('Current user name init state : ${currentUser.displayName}');
     updateUserAndGetListOfAllUsers();
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    if (state == AppLifecycleState.resumed) {
+      databaseMethods.changeOnlineStatus({
+        "status": true,
+      }, currentUser.uid);
+      developerlog.log("Status Online");
+    } else {
+      databaseMethods.changeOnlineStatus({
+        "status": false,
+      }, currentUser.uid);
+    }
   }
 
   getUsernamesOfRecentConversations(List a) {
@@ -79,7 +99,7 @@ class _ChatRoomState extends State<ChatRoom> {
               currentAccountPicture: CircleAvatar(
                 backgroundColor: Colors.red,
                 child: Text(
-                  (currentUser.displayName ?? "").toUpperCase()[0],
+                  (currentUser.displayName ?? ""),
                   style: TextStyle(fontSize: 40.0),
                 ),
               ),

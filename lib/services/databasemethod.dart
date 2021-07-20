@@ -1,68 +1,124 @@
+import 'dart:developer';
+
 import 'package:cloud_firestore/cloud_firestore.dart';
 
-class DatabaseMethods{
-  
-  Future uploadData(Map<String,String> userInfo)async {
-    await FirebaseFirestore.instance.collection("Users").add(userInfo)
-    .catchError((e){
+class DatabaseMethods {
+  Future uploadData(Map<String, dynamic> userInfo) async {
+    await FirebaseFirestore.instance
+        .collection("Users")
+        .add(userInfo)
+        .catchError((e) {
       print(e.toString());
     });
   }
 
   Future<QuerySnapshot> findUserByEmail(String email) async {
-   return await FirebaseFirestore.instance.collection("Users").where("Email", isEqualTo: email).get()
-    .catchError((e){
+    return await FirebaseFirestore.instance
+        .collection("Users")
+        .where("Email", isEqualTo: email)
+        .get()
+        .catchError((e) {
       print(e.toString());
     });
   }
 
   Future<QuerySnapshot> findUser(String username) async {
-   return await FirebaseFirestore.instance.collection("Users").where("Username", isEqualTo: username).get()
-    .catchError((e){
+    return await FirebaseFirestore.instance
+        .collection("Users")
+        .where("Username", isEqualTo: username)
+        .get()
+        .catchError((e) {
       print(e.toString());
     });
   }
 
   Future createChatRoom(String chatRoomId, chatRoomMap) async {
-    await FirebaseFirestore.instance.collection("ChatRoom").doc(chatRoomId).set(chatRoomMap)
-     .catchError((e){
+    await FirebaseFirestore.instance
+        .collection("ChatRoom")
+        .doc(chatRoomId)
+        .set(chatRoomMap)
+        .catchError((e) {
       print(e.toString());
     });
-    
   }
 
   Future sendMessage(String chatroomId, Map messageMap) async {
-    await FirebaseFirestore.instance.collection("ChatRoom").doc(chatroomId).collection("chats").add(messageMap).catchError((e){
+    await FirebaseFirestore.instance
+        .collection("ChatRoom")
+        .doc(chatroomId)
+        .collection("chats")
+        .add(messageMap)
+        .catchError((e) {
       print(e.toString());
     });
   }
 
   Stream<QuerySnapshot> showMessages(String chatroomId) {
-    return FirebaseFirestore.instance.collection("ChatRoom").doc(chatroomId).collection("chats").orderBy("created",descending: true).snapshots();
+    return FirebaseFirestore.instance
+        .collection("ChatRoom")
+        .doc(chatroomId)
+        .collection("chats")
+        .orderBy("created", descending: true)
+        .snapshots();
   }
 
-  showAllUsers(){
-    FirebaseFirestore.instance.collection("Users").get().catchError((e){
+  showAllUsers() {
+    FirebaseFirestore.instance.collection("Users").get().catchError((e) {
       print(e.toString());
     });
   }
 
-  Stream<QuerySnapshot>  recentChatsStreams(String username)  {
-    return FirebaseFirestore.instance.collection("ChatRoom").where('users', arrayContains: "$username").snapshots();
+  Stream<QuerySnapshot> recentChatsStreams(String username) {
+    return FirebaseFirestore.instance
+        .collection("ChatRoom")
+        .where('users', arrayContains: "$username")
+        .snapshots();
   }
 
-  Stream checkForFirstConversation(String chatRoomId){
-    return FirebaseFirestore.instance.collection("ChatRoom").doc(chatRoomId).collection("chats").orderBy("created",descending: true).limit(1).snapshots();
+  Stream checkForFirstConversation(String chatRoomId) {
+    return FirebaseFirestore.instance
+        .collection("ChatRoom")
+        .doc(chatRoomId)
+        .collection("chats")
+        .orderBy("created", descending: true)
+        .limit(1)
+        .snapshots();
   }
 
-  
-
-  Stream showRecentMessages(String chatRoomId){
-    return FirebaseFirestore.instance.collection("ChatRoom").doc(chatRoomId).collection("chats").orderBy("created", descending: true).limit(1).snapshots();
+  Stream showRecentMessages(String chatRoomId) {
+    return FirebaseFirestore.instance
+        .collection("ChatRoom")
+        .doc(chatRoomId)
+        .collection("chats")
+        .orderBy("created", descending: true)
+        .limit(1)
+        .snapshots();
   }
 
-  Future<QuerySnapshot> getAllUsers(){
+  Future<QuerySnapshot> getAllUsers() {
     return FirebaseFirestore.instance.collection("Users").get();
   }
 
+  Future changeOnlineStatus(Map<String, dynamic> status, String uid) async {
+    String docid;
+    QuerySnapshot document = await FirebaseFirestore.instance
+        .collection("Users")
+        .where("uid", isEqualTo: uid)
+        .limit(1)
+        .get();
+    document.docs.forEach((element) {
+      log(element.id);
+      FirebaseFirestore.instance
+          .collection("Users")
+          .doc(element.id)
+          .update(status);
+    });
+
+    // FirebaseFirestore.instance.collection("Users").doc(docid).set(status);
+  }
+
+  Stream checkUserStatus(String receiverName){
+   return FirebaseFirestore.instance.collection("Users").where("Username",isEqualTo: receiverName ).limit(1).get().asStream();
+   
+  }
 }
