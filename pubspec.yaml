@@ -38,6 +38,7 @@ dependencies:
   loading_indicator: 
   provider: 
   shared_preferences: 
+  grouped_list: ^4.1.0
 
 dev_dependencies:
   flutter_test:

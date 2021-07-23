@@ -81,13 +81,6 @@ class _SignInState extends State<SignIn> {
                   );
                 });
           } else {
-            //  HelperFunctions.saveUserEmailSharedPreference(emailController.text);
-            //  saveUser() async {
-            //   String username = await databaseMethods.findUserByEmail(emailController.text).then((value) => value.docs[0].data()["Username"]);
-            //   // HelperFunctions.saveUserNameSharedPreference(username);
-            //   print(username);
-            // }
-            // saveUser();
           }
         }
         );
@@ -100,7 +93,7 @@ class _SignInState extends State<SignIn> {
                   "Error",
                   style: TextStyle(color: Colors.red),
                 ),
-                content: Text("User doesn't exist"),
+                content: Text("Your email or password was incorrect. Please try again."),
                 actions: <Widget>[
                   FlatButton(
                       color: Color(0xff4081EC),

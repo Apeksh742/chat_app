@@ -3,6 +3,8 @@ import 'dart:io';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:chat_app/Pages/previewImage.dart';
 import 'package:chat_app/Pages/tapImage.dart';
+import 'package:chat_app/modal/messageModel.dart';
+import 'package:grouped_list/grouped_list.dart';
 import 'package:intl/intl.dart';
 import 'package:loading_indicator/loading_indicator.dart';
 import 'package:image_picker/image_picker.dart';
@@ -27,6 +29,7 @@ class _ConversationScreenState extends State<ConversationScreen> {
   Stream chatMessageStream;
   String message;
   File _image;
+
   final currentUser = FirebaseAuth.instance.currentUser;
   firebase_storage.FirebaseStorage storageInstance =
       firebase_storage.FirebaseStorage.instance;
@@ -104,22 +107,22 @@ class _ConversationScreenState extends State<ConversationScreen> {
         ));
   }
 
-  Widget textOrImageBox(List<QueryDocumentSnapshot> querySnapshot, int index,
-      BuildContext context, String sentBy) {
-    Timestamp myTimeStamp = querySnapshot[index].get('created');
+  Widget textOrImageBox(
+      MessageModel message, BuildContext context, String sentBy) {
+    Timestamp myTimeStamp = message.created;
     // print("My Timestamp: $myTimeStamp");
     DateTime myDateTime = myTimeStamp?.toDate();
     // print("MydateTime: $myDateTime");
     String formattedTime = DateFormat.jm().format(myDateTime ?? DateTime.now());
     // String currentTime = DateFormat.jm().format(DateTime.now());
     // print(formattedTime);
-    if (querySnapshot[index].get("isPhoto") == true) {
+    if (message.isPhoto == true) {
       return GestureDetector(
         onTap: () {
           Navigator.push(context, MaterialPageRoute(builder: (context) {
             print("Button Pressed");
             return TapImage(
-              downloadUrl: querySnapshot[index].get('message'),
+              downloadUrl: message.message,
             );
           }));
         },
@@ -151,7 +154,7 @@ class _ConversationScreenState extends State<ConversationScreen> {
                         indicatorType: Indicator.circleStrokeSpin,
                         color: Colors.green,
                       ))),
-                  imageUrl: querySnapshot[index].get('message')),
+                  imageUrl: message.message),
             )),
       );
     }
@@ -175,7 +178,7 @@ class _ConversationScreenState extends State<ConversationScreen> {
           crossAxisAlignment: CrossAxisAlignment.end,
           children: [
             SelectableText(
-              querySnapshot[index].get('message'),
+              message.message,
               style: TextStyle(
                   color: sentBy == currentUser.displayName
                       ? Colors.white
@@ -306,9 +309,6 @@ class _ConversationScreenState extends State<ConversationScreen> {
                   AsyncSnapshot<QuerySnapshot> snapshot) {
                 if (snapshot.hasData) {
                   bool status = snapshot.data.docs.first.get("status");
-                  // print();
-                  // Map<String, dynamic> data = snapshot.data;
-                  // bool status = data["status"];
                   return Container(
                       child: status
                           ? Text(
@@ -341,88 +341,141 @@ class _ConversationScreenState extends State<ConversationScreen> {
             Expanded(
                 child: Container(
               padding: EdgeInsets.symmetric(horizontal: 5),
-              child: StreamBuilder(
+              child: StreamBuilder<QuerySnapshot>(
                   stream: DatabaseMethods().showMessages(widget.chatRoomId),
                   builder: (context, snapshot) {
                     if (snapshot.hasData) {
                       List<QueryDocumentSnapshot> myQueryList =
                           snapshot.data.docs;
-                      return ListView.builder(
-                          itemCount: myQueryList.length,
+                      List<MessageModel> messages = [];
+                      myQueryList.forEach((element) {
+                        messages.add(MessageModel(
+                            created: element.get("created"),
+                            isPhoto: element.get('isPhoto'),
+                            message: element.get('message'),
+                            sentBy: element.get('sentBy'),
+                            users: element.get('users')));
+                      });
+                      return GroupedListView(
+                          elements: messages,
+                          groupBy: (MessageModel msg) => DateFormat(
+                                  'dd-MM-yyyy')
+                              .format(msg.created?.toDate() ?? DateTime.now())
+                              .toString(),
+                          groupComparator: (String value1, String value2) =>
+                              value2.compareTo(value1),
+                          // itemComparator:
+                          //     (MessageModel msg1, MessageModel msg2) => msg1
+                          //         .created?.toDate() ?? DateTime.now()
+                          //         .compareTo(msg2.created?.toDate() ?? DateTime.now()),
+                          // msg1.message.compareTo(msg2.message),
+                          order: GroupedListOrder.ASC,
                           reverse: true,
-                          itemBuilder: (BuildContext context, int index) {
-                            String sentBy = myQueryList[index].get("sentBy");
-                            Timestamp myTimeStamp =
-                                myQueryList[index].get('created');
-                            DateTime myDateTime = myTimeStamp?.toDate();
-                            String formattedTime = DateFormat('dd-MM-yyyy')
-                                .format(myDateTime ?? DateTime.now());
-                            int todayCount = 0;
-                            if (formattedTime.substring(0, 2) ==
-                                DateFormat('dd-MM-yyyy')
-                                    .format(DateTime.now())
-                                    .substring(0, 2)) {
-                              todayCount++;
-                              log(todayCount.toString());
-                              return Column(
+                          // floatingHeader: true,
+                          useStickyGroupSeparators: true,
+                          groupSeparatorBuilder: (String value) => Padding(
+                                padding: const EdgeInsets.all(8),
+                                child: Container(
+                                  child: Text(
+                                    value,
+                                    textAlign: TextAlign.center,
+                                    style:
+                                        TextStyle(fontWeight: FontWeight.bold),
+                                  ),
+                                ),
+                              ),
+                          itemBuilder: (context, MessageModel message) =>
+                              Column(
                                 children: [
-                                  todayCount == 1
-                                      ? Center(child: Text("Today"))
-                                      : Container(),
                                   Align(
-                                    alignment: sentBy == currentUser.displayName
+                                    alignment: message.sentBy ==
+                                            currentUser.displayName
                                         ? Alignment.centerRight
                                         : Alignment.centerLeft,
                                     child: textOrImageBox(
-                                      myQueryList,
-                                      index,
+                                      message,
                                       context,
-                                      sentBy,
+                                      message.sentBy,
                                     ),
                                   )
                                 ],
-                              );
-                            } else if (int.parse(
-                                    formattedTime.substring(0, 2)) ==
-                                int.parse(DateFormat('dd-MM-yyyy')
-                                        .format(DateTime.now())
-                                        .substring(0, 2)) -
-                                    1)
-                              return Column(
-                                children: [
-                                  Center(child: Text("Yesterday")),
-                                  Align(
-                                    alignment: sentBy == currentUser.displayName
-                                        ? Alignment.centerRight
-                                        : Alignment.centerLeft,
-                                    child: textOrImageBox(
-                                      myQueryList,
-                                      index,
-                                      context,
-                                      sentBy,
-                                    ),
-                                  )
-                                ],
-                              );
-                            else {
-                              return Column(
-                                children: [
-                                  Center(child: Text(formattedTime)),
-                                  Align(
-                                    alignment: sentBy == currentUser.displayName
-                                        ? Alignment.centerRight
-                                        : Alignment.centerLeft,
-                                    child: textOrImageBox(
-                                      myQueryList,
-                                      index,
-                                      context,
-                                      sentBy,
-                                    ),
-                                  )
-                                ],
-                              );
-                            }
-                          });
+                              ));
+
+                      // return ListView.builder(
+                      //     itemCount: messages.length,
+                      //     reverse: true,
+                      //     itemBuilder: (BuildContext context, int index) {
+                      //       String sentBy = messages[index].sentBy;
+                      //       Timestamp myTimeStamp = messages[index].created;
+                      //       DateTime myDateTime = myTimeStamp?.toDate();
+                      //       String formattedTime = DateFormat('dd-MM-yyyy')
+                      //           .format(myDateTime ?? DateTime.now());
+                      //       int todayCount = 0;
+                      //       if (formattedTime.substring(0, 2) ==
+                      //           DateFormat('dd-MM-yyyy')
+                      //               .format(DateTime.now())
+                      //               .substring(0, 2)) {
+                      //         todayCount++;
+                      //         log(todayCount.toString());
+                      //         return Column(
+                      //           children: [
+                      //             todayCount == 1
+                      //                 ? Center(child: Text("Today"))
+                      //                 : Container(),
+                      //             Align(
+                      //               alignment: sentBy == currentUser.displayName
+                      //                   ? Alignment.centerRight
+                      //                   : Alignment.centerLeft,
+                      //               child: textOrImageBox(
+                      //                 messages,
+                      //                 index,
+                      //                 context,
+                      //                 sentBy,
+                      //               ),
+                      //             )
+                      //           ],
+                      //         );
+                      //       } else if (int.parse(
+                      //               formattedTime.substring(0, 2)) ==
+                      //           int.parse(DateFormat('dd-MM-yyyy')
+                      //                   .format(DateTime.now())
+                      //                   .substring(0, 2)) -
+                      //               1)
+                      //         return Column(
+                      //           children: [
+                      //             Center(child: Text("Yesterday")),
+                      //             Align(
+                      //               alignment: sentBy == currentUser.displayName
+                      //                   ? Alignment.centerRight
+                      //                   : Alignment.centerLeft,
+                      //               child: textOrImageBox(
+                      //                 messages,
+                      //                 index,
+                      //                 context,
+                      //                 sentBy,
+                      //               ),
+                      //             )
+                      //           ],
+                      //         );
+                      //       else {
+                      //         return Column(
+                      //           children: [
+                      //             Center(child: Text(formattedTime)),
+                      //             Align(
+                      //               alignment: sentBy == currentUser.displayName
+                      //                   ? Alignment.centerRight
+                      //                   : Alignment.centerLeft,
+                      //               child: textOrImageBox(
+                      //                 messages,
+                      //                 index,
+                      //                 context,
+                      //                 sentBy,
+                      //               ),
+                      //             )
+                      //           ],
+                      //         );
+                      //       }
+                      //     });
                     }
                     return Container();
                   }),
