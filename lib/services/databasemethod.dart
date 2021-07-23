@@ -13,13 +13,18 @@ class DatabaseMethods {
   }
 
   Future<QuerySnapshot> findUserByEmail(String email) async {
-    return await FirebaseFirestore.instance
+   try{
+      return await FirebaseFirestore.instance
         .collection("Users")
         .where("Email", isEqualTo: email)
         .get()
         .catchError((e) {
       print(e.toString());
     });
+   }
+   catch(e){
+     print(e.toString());
+   }
   }
 
   Future<QuerySnapshot> findUser(String username) async {

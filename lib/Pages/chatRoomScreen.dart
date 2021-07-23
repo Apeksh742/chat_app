@@ -3,6 +3,7 @@ import 'dart:math';
 
 import 'package:chat_app/Pages/conversationScreen.dart';
 import 'package:chat_app/Pages/searchUser.dart';
+import 'package:chat_app/helper/helperfunctions.dart';
 import 'package:chat_app/modal/user.dart';
 import 'package:chat_app/services/authMethods.dart';
 import 'package:chat_app/services/databasemethod.dart';
@@ -12,6 +13,7 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:loading_indicator/loading_indicator.dart';
 import 'package:provider/provider.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 class ChatRoom extends StatefulWidget {
   @override
@@ -20,18 +22,25 @@ class ChatRoom extends StatefulWidget {
 
 class _ChatRoomState extends State<ChatRoom> with WidgetsBindingObserver {
   DatabaseMethods databaseMethods = DatabaseMethods();
-  User currentUser = FirebaseAuth.instance.currentUser;
+  User currentUser;
   List<String> myusers = []; //List of all users which help while serching users
   @override
   void initState() {
     super.initState();
     setState(() {
       currentUser = FirebaseAuth.instance.currentUser;
+      currentUser.reload();
+    });
+    databaseMethods.changeOnlineStatus({
+      "status": true,
+    }, currentUser.uid);
+    WidgetsBinding.instance.addPostFrameCallback((_) async {
+      updateUserAndGetListOfAllUsers();
     });
     WidgetsBinding.instance.addObserver(this);
     print("initState called");
+    
     print('Current user name init state : ${currentUser.displayName}');
-    updateUserAndGetListOfAllUsers();
   }
 
   @override
@@ -67,9 +76,11 @@ class _ChatRoomState extends State<ChatRoom> with WidgetsBindingObserver {
   }
 
   void updateUserAndGetListOfAllUsers() async {
-    final user = Provider.of<MyUser>(context, listen: false);
-    user.username = currentUser.displayName;
-    user.email = currentUser.email;
+    developerlog.log(await HelperFunctions.getUserNameSharedPreference());
+   developerlog.log(await HelperFunctions.getUserEmailSharedPreference());
+    final myuser = Provider.of<MyUser>(context,listen: false);
+    myuser.upDateUser(
+        currentUser.uid, currentUser.email, currentUser.displayName);
     print('update User successfully');
 
     databaseMethods.getAllUsers().then((value) => value.docs.forEach((element) {
@@ -94,16 +105,53 @@ class _ChatRoomState extends State<ChatRoom> with WidgetsBindingObserver {
           padding: EdgeInsets.zero,
           children: <Widget>[
             UserAccountsDrawerHeader(
-              accountName: Text(currentUser.displayName ?? ""),
-              accountEmail: Text(currentUser.email ?? ""),
-              currentAccountPicture: CircleAvatar(
-                backgroundColor: Colors.red,
-                child: Text(
-                  (currentUser.displayName ?? ""),
-                  style: TextStyle(fontSize: 40.0),
+                accountName: FutureBuilder(
+                  future: HelperFunctions.getUserNameSharedPreference(),
+                  builder: (BuildContext context, AsyncSnapshot snapshot) {
+                    if(snapshot.hasData){
+                      return Text(snapshot.data?? "") ;
+                    }
+                    return LoadingIndicator(indicatorType: Indicator.ballPulse);
+                  },
+                ),
+                accountEmail: FutureBuilder(
+                  future: HelperFunctions.getUserEmailSharedPreference(),
+                  builder: (BuildContext context, AsyncSnapshot snapshot) {
+                    if(snapshot.hasData){
+                      return Text(snapshot.data ?? "");
+                    }
+                    return LoadingIndicator(indicatorType: Indicator.ballPulse);
+                  },
+                ),
+                currentAccountPicture: CircleAvatar(
+                  backgroundColor: Colors.red,
+                  child: FutureBuilder(
+                    future: HelperFunctions.getUserNameSharedPreference(),
+                    builder: (BuildContext context, AsyncSnapshot snapshot) {
+                      if(snapshot.hasData){
+                        return Text(
+                    (snapshot.data[0] ?? ""),
+                    style: TextStyle(fontSize: 40.0),
+                  );
+                      }
+                      return Container();
+                    },
+                  ),
                 ),
               ),
-            ),
+            // Consumer<MyUser>(builder: (context, myUser, child) {
+            //   return UserAccountsDrawerHeader(
+            //     accountName: Text(myUser.username ?? ""),
+            //     accountEmail: Text(myUser.email ?? ""),
+            //     currentAccountPicture: CircleAvatar(
+            //       backgroundColor: Colors.red,
+            //       child: Text(
+            //         (myUser.username[0] ?? ""),
+            //         style: TextStyle(fontSize: 40.0),
+            //       ),
+            //     ),
+            //   );
+            // }),
             ListTile(
               leading: Icon(Icons.home),
               title: Text("Home"),
@@ -146,6 +194,12 @@ class _ChatRoomState extends State<ChatRoom> with WidgetsBindingObserver {
                               color: Color(0xff4081EC),
                               colorBrightness: Brightness.dark,
                               onPressed: () {
+                                Navigator.pop(context);
+                                final myuser =
+                                    Provider.of<MyUser>(context, listen: false);
+                                databaseMethods.changeOnlineStatus({
+                                  "status": false,
+                                }, myuser.userId);
                                 final auth = Provider.of<AuthMethods>(context,
                                     listen: false);
                                 auth.signOut();

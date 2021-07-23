@@ -1,12 +1,16 @@
 
 
-class MyUser  {
+import 'package:flutter/widgets.dart';
+
+class MyUser extends ChangeNotifier {
   String userId;
   String email;
   String username;
-  MyUser({ this.userId,this.username,this.email}){
-    print("Hello  " + userId );
-    
+  
+  upDateUser(String userId,String email,String username){
+    this.userId=userId;
+    this.email=email;
+    this.username=username;
     
   }
 }

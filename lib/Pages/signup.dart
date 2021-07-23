@@ -1,5 +1,10 @@
+import 'dart:developer';
+
+import 'package:chat_app/Pages/chatRoomScreen.dart';
 import 'package:chat_app/Pages/signin.dart';
 import 'package:chat_app/Widget/widget.dart';
+import 'package:chat_app/helper/helperfunctions.dart';
+import 'package:chat_app/modal/user.dart';
 import 'package:chat_app/services/authMethods.dart';
 import 'package:chat_app/services/databasemethod.dart';
 import 'package:flutter/material.dart';
@@ -21,33 +26,68 @@ class _SignUpState extends State<SignUp> {
 
   validateUserInfo() async {
     if (formKey.currentState.validate()) {
-      // HelperFunctions.saveUserEmailSharedPreference(emailController.text);
-      // HelperFunctions.saveUserNameSharedPreference(usernameController.text);
+      final String username = usernameController.text;
+      
       final auth = Provider.of<AuthMethods>(context, listen: false);
       try {
-        auth
+        setState(() {
+          if (mounted) isLoading = true;
+        });
+       await auth
             .signUpWithEmailAndPassword(
                 emailController.text, passwordController.text)
-            .then((user) {
-          // user.updateProfile(displayName: usernameCfluontroller.text);
-          user.updateDisplayName(usernameController.text);
-          user.reload();
-
-          Map<String, dynamic> userInfo = {
-            "Username": usernameController.text,
-            "Email": user.email,
-            "uid": user.uid,
-            "status": true,
-          };
-          print("Firebase Username updated : ${user.displayName}");
-          database.uploadData(userInfo);
-        });
+            .then((user)async {
+          if (user != null) {
+            log("User created Succesfully");
+            await user.updateDisplayName(username);
+            await HelperFunctions.saveUserEmailSharedPreference(emailController.text);
+            await HelperFunctions.saveUserNameSharedPreference(usernameController.text);
+            // setState(() {
+            //   if (mounted) isLoading = false;
+            // });
+            Navigator.pushReplacement(context, MaterialPageRoute(builder: (context)=> ChatRoom()));
+            Map<String, dynamic> userInfo = {
+              "Username": usernameController.text,
+              "Email": user.email,
+              "uid": user.uid,
+              "status": true,
+            };
+            // print("Firebase Username updated : ${user.displayName}");
+            database.uploadData(userInfo);
+          }
+          if (user == null) {
+            setState(() {
+              isLoading = false;
+            });
+            showDialog(
+                context: context,
+                builder: (BuildContext context) {
+                  return AlertDialog(
+                    title: Text(
+                      "Error",
+                      style: TextStyle(color: Colors.red),
+                    ),
+                    content: Text("Email lready in use"),
+                    actions: <Widget>[
+                      FlatButton(
+                          color: Color(0xff4081EC),
+                          colorBrightness: Brightness.dark,
+                          onPressed: () {
+                            Navigator.of(context).pop();
+                          },
+                          child: Text("Close"))
+                    ],
+                  );
+                });
+          }
+        }
+        );
       } on Exception catch (e) {
+        setState(() {
+          if (mounted) isLoading = false;
+        });
         print(e.toString());
       }
-      setState(() {
-        if (mounted) isLoading = true;
-      });
     }
   }
 

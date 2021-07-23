@@ -1,4 +1,5 @@
 import 'package:chat_app/Widget/authWidgetBuilder.dart';
+import 'package:chat_app/modal/user.dart';
 
 import 'package:chat_app/services/authMethods.dart';
 import 'package:flutter/material.dart';
@@ -7,6 +8,7 @@ import 'package:provider/provider.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'Widget/authWidget.dart';
+import 'Widget/authenticate.dart';
 
 // const AndroidNotificationChannel channel = AndroidNotificationChannel(
 //     'high_importance_channel', // id
@@ -21,22 +23,27 @@ import 'Widget/authWidget.dart';
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await Firebase.initializeApp();
-  runApp( MyApp());
+  runApp(MyApp());
 }
 
 class MyApp extends StatelessWidget {
   // This widget is the root of your application.
   @override
   Widget build(BuildContext context) {
-
-    return MultiProvider(providers: [
-      Provider<AuthMethods>(create: (context) => AuthMethods()),
-    ],
-    child: AuthWidgetBuilder(builder: (context,userSnapshot) => MaterialApp(
-     debugShowCheckedModeBanner: false,
-     home: AuthWidget(userSnapshot: userSnapshot,)
-   )),
-  );
-    
+    return MultiProvider(
+      providers: [
+        Provider<AuthMethods>(create: (context) => AuthMethods()),
+        ChangeNotifierProvider<MyUser>(create: (context) => MyUser()),
+      ],
+      child: MaterialApp(
+        debugShowCheckedModeBanner: false,
+        home: Authenticate(),
+      ),
+      //   child:
+      //   AuthWidgetBuilder(builder: (context,userSnapshot) => MaterialApp(
+      //    debugShowCheckedModeBanner: false,
+      //    home: AuthWidget(userSnapshot: userSnapshot,)
+      //  )),
+    );
   }
 }

@@ -7,14 +7,14 @@ class AuthMethods {
 
   // String firebaseuserUid;
 
-  MyUser _userFromFirebaseUser({@required User firebaseUser}) {
-    return firebaseUser != null ? MyUser(userId: firebaseUser.uid) : null;
-  }
+  // MyUser _userFromFirebaseUser({@required User firebaseUser}) {
+  //   return firebaseUser != null ? MyUser(userId: firebaseUser.uid) : null;
+  // }
 
-  Stream<MyUser> get authStateChanges {
+  Stream<User> get authStateChanges {
     return _auth
-        .authStateChanges()
-        .map((user) => _userFromFirebaseUser(firebaseUser: user));
+        .authStateChanges();
+        
   }
 
   Future<User> signInWithEmailAndPassword(String email, String password) async {
