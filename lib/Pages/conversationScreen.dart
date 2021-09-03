@@ -362,8 +362,19 @@ class _ConversationScreenState extends State<ConversationScreen> {
                                   'dd-MM-yyyy')
                               .format(msg.created?.toDate() ?? DateTime.now())
                               .toString(),
-                          groupComparator: (String value1, String value2) =>
-                              value2.compareTo(value1),
+                          groupComparator: (String value1, String value2)
+                              // value2.compareTo(value1),
+                              {
+                            int date1 = int.parse(value1.substring(0, 2));
+                            int date2 = int.parse(value2.substring(0, 2));
+                            if (date1 < date2) {
+                              return -1;
+                            } else if (date1 > date2) {
+                              return 1;
+                            } else {
+                              return 0;
+                            }
+                          },
                           // itemComparator:
                           //     (MessageModel msg1, MessageModel msg2) => msg1
                           //         .created?.toDate() ?? DateTime.now()

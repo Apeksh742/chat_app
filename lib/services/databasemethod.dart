@@ -105,7 +105,6 @@ class DatabaseMethods {
   }
 
   Future changeOnlineStatus(Map<String, dynamic> status, String uid) async {
-    String docid;
     QuerySnapshot document = await FirebaseFirestore.instance
         .collection("Users")
         .where("uid", isEqualTo: uid)
@@ -122,8 +121,63 @@ class DatabaseMethods {
     // FirebaseFirestore.instance.collection("Users").doc(docid).set(status);
   }
 
+  Future updateProfilePicture(Map<String, dynamic> profileLink , String uid) async {
+    QuerySnapshot document = await FirebaseFirestore.instance
+        .collection("Users")
+        .where("uid", isEqualTo: uid)
+        .limit(1)
+        .get();
+    document.docs.forEach((element) {
+      log(element.id);
+      FirebaseFirestore.instance
+          .collection("Users")
+          .doc(element.id)
+          .update(profileLink);
+    });
+  }
+
   Stream checkUserStatus(String receiverName){
    return FirebaseFirestore.instance.collection("Users").where("Username",isEqualTo: receiverName ).limit(1).get().asStream();
    
+  }
+
+  Future findUserbyUsername(String receiverName) {
+    return FirebaseFirestore.instance
+        .collection("Users")
+        .where("Username", isEqualTo: receiverName)
+        .limit(1)
+        .get();
+  }
+
+  Future updateProfileData(Map<String, dynamic> data, String uid) async {
+    QuerySnapshot document = await FirebaseFirestore.instance
+        .collection("Users")
+        .where("uid", isEqualTo: uid)
+        .limit(1)
+        .get();
+    document.docs.forEach((element) {
+      log(element.id);
+      FirebaseFirestore.instance
+          .collection("Users")
+          .doc(element.id)
+          .update(data);
+    });
+  }
+
+  Stream getProfile(String uid) {
+    return FirebaseFirestore.instance
+        .collection("Users")
+        .where("uid", isEqualTo: uid)
+        .limit(1)
+        .get()
+        .asStream();
+  }
+
+  Future getProfileData(String uid) {
+    return FirebaseFirestore.instance
+        .collection("Users")
+        .where("uid", isEqualTo: uid)
+        .limit(1)
+        .get();
   }
 }

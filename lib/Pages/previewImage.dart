@@ -86,7 +86,6 @@ class _PreviewPageState extends State<PreviewPage> {
     setState(() {
       print("Set State called inside PageViewer");
       if (pickedFile != null) {
-
         images.add(File(pickedFile.path));
         //_image = File(pickedFile.path); // Use if you only need a single picture
       } else {

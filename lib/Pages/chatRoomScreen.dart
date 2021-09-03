@@ -1,7 +1,9 @@
 import 'dart:developer' as developerlog;
 import 'dart:math';
 
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:chat_app/Pages/conversationScreen.dart';
+import 'package:chat_app/Pages/editProfile.dart';
 import 'package:chat_app/Pages/searchUser.dart';
 import 'package:chat_app/helper/helperfunctions.dart';
 import 'package:chat_app/modal/user.dart';
@@ -39,7 +41,7 @@ class _ChatRoomState extends State<ChatRoom> with WidgetsBindingObserver {
     });
     WidgetsBinding.instance.addObserver(this);
     print("initState called");
-    
+
     print('Current user name init state : ${currentUser.displayName}');
   }
 
@@ -77,8 +79,8 @@ class _ChatRoomState extends State<ChatRoom> with WidgetsBindingObserver {
 
   void updateUserAndGetListOfAllUsers() async {
     developerlog.log(await HelperFunctions.getUserNameSharedPreference());
-   developerlog.log(await HelperFunctions.getUserEmailSharedPreference());
-    final myuser = Provider.of<MyUser>(context,listen: false);
+    developerlog.log(await HelperFunctions.getUserEmailSharedPreference());
+    final myuser = Provider.of<MyUser>(context, listen: false);
     myuser.upDateUser(
         currentUser.uid, currentUser.email, currentUser.displayName);
     print('update User successfully');
@@ -108,8 +110,8 @@ class _ChatRoomState extends State<ChatRoom> with WidgetsBindingObserver {
                 accountName: FutureBuilder(
                   future: HelperFunctions.getUserNameSharedPreference(),
                   builder: (BuildContext context, AsyncSnapshot snapshot) {
-                    if(snapshot.hasData){
-                      return Text(snapshot.data?? "") ;
+                    if (snapshot.hasData) {
+                      return Text(snapshot.data ?? "");
                     }
                     return LoadingIndicator(indicatorType: Indicator.ballPulse);
                   },
@@ -117,28 +119,83 @@ class _ChatRoomState extends State<ChatRoom> with WidgetsBindingObserver {
                 accountEmail: FutureBuilder(
                   future: HelperFunctions.getUserEmailSharedPreference(),
                   builder: (BuildContext context, AsyncSnapshot snapshot) {
-                    if(snapshot.hasData){
+                    if (snapshot.hasData) {
                       return Text(snapshot.data ?? "");
                     }
                     return LoadingIndicator(indicatorType: Indicator.ballPulse);
                   },
                 ),
-                currentAccountPicture: CircleAvatar(
-                  backgroundColor: Colors.red,
-                  child: FutureBuilder(
-                    future: HelperFunctions.getUserNameSharedPreference(),
-                    builder: (BuildContext context, AsyncSnapshot snapshot) {
-                      if(snapshot.hasData){
-                        return Text(
-                    (snapshot.data[0] ?? ""),
-                    style: TextStyle(fontSize: 40.0),
-                  );
+                currentAccountPicture: FutureBuilder<QuerySnapshot>(
+                    future: databaseMethods.getProfileData(currentUser.uid),
+                    builder: (BuildContext ctx,
+                        AsyncSnapshot<QuerySnapshot> snapshot) {
+                      if (snapshot.hasData) {
+                        Map<String, dynamic> data =
+                            snapshot.data.docs.first.data();
+                        if (data.containsKey("profileURL")) {
+                          String profileURL =
+                              snapshot.data.docs.first.get("profileURL");
+
+                          return CachedNetworkImage(
+                            imageUrl: profileURL,
+                            imageBuilder: (context, imageProvider) => Container(
+                              width: 100.0,
+                              height: 100.0,
+                              decoration: BoxDecoration(
+                                shape: BoxShape.circle,
+                                image: DecorationImage(
+                                    image: imageProvider, fit: BoxFit.cover),
+                              ),
+                            ),
+                            placeholder: (context, url) => Container(
+                                height: 100,
+                                width: 100,
+                                child: Center(
+                                    child: LoadingIndicator(
+                                  indicatorType: Indicator.circleStrokeSpin,
+                                ))),
+                            errorWidget: (context, url, error) =>
+                                Icon(Icons.error),
+                          );
+                        }
+
+                        return CircleAvatar(
+                          backgroundColor: Colors.red,
+                          child: FutureBuilder(
+                            future:
+                                HelperFunctions.getUserNameSharedPreference(),
+                            builder:
+                                (BuildContext context, AsyncSnapshot snapshot) {
+                              if (snapshot.hasData) {
+                                return Text(
+                                  (snapshot.data[0] ?? ""),
+                                  style: TextStyle(fontSize: 40.0),
+                                );
+                              }
+                              return Container();
+                            },
+                          ),
+                        );
+                      } else {
+                        return CircleAvatar(
+                          backgroundColor: Colors.red,
+                          child: FutureBuilder(
+                            future:
+                                HelperFunctions.getUserNameSharedPreference(),
+                            builder:
+                                (BuildContext context, AsyncSnapshot snapshot) {
+                              if (snapshot.hasData) {
+                                return Text(
+                                  (snapshot.data[0] ?? ""),
+                                  style: TextStyle(fontSize: 40.0),
+                                );
+                              }
+                              return Container();
+                            },
+                          ),
+                        );
                       }
-                      return Container();
-                    },
-                  ),
-                ),
-              ),
+                    })),
             // Consumer<MyUser>(builder: (context, myUser, child) {
             //   return UserAccountsDrawerHeader(
             //     accountName: Text(myUser.username ?? ""),
@@ -161,18 +218,13 @@ class _ChatRoomState extends State<ChatRoom> with WidgetsBindingObserver {
             ),
             ListTile(
               leading: Icon(Icons.settings),
-              title: Text("Settings"),
+              title: Text("Edit Profile"),
               onTap: () {
-                Navigator.pop(context);
+                Navigator.push(context,
+                    MaterialPageRoute(builder: (ctx) => EditProfile()));
               },
             ),
-            ListTile(
-              leading: Icon(Icons.contacts),
-              title: Text("Contact Us"),
-              onTap: () {
-                Navigator.pop(context);
-              },
-            ),
+
             ListTile(
               leading: Icon(Icons.exit_to_app),
               title: Text("Log Out"),
@@ -294,10 +346,55 @@ class _ChatRoomState extends State<ChatRoom> with WidgetsBindingObserver {
                                   child: Padding(
                                     padding: const EdgeInsets.all(8.0),
                                     child: Row(children: [
-                                      CircleAvatar(
-                                        backgroundColor: Colors
-                                            .primaries[Random().nextInt(15)],
-                                        child: Icon(Icons.person),
+                                      // CircleAvatar(//TODO:
+                                      //   backgroundColor: Colors
+                                      //       .primaries[Random().nextInt(15)],
+                                      //   child: Icon(Icons.person),
+                                      // ),
+                                      FutureBuilder<QuerySnapshot>(
+                                        future:
+                                            databaseMethods.findUserbyUsername(
+                                                usernameOfRecentChats),
+                                        builder: (BuildContext context,
+                                            AsyncSnapshot<QuerySnapshot>
+                                                snapshot) {
+                                          if (snapshot.hasData) {
+                                            Map<String, dynamic> data =
+                                                snapshot.data.docs.first.data();
+                                            if (data
+                                                .containsKey("profileURL")) {
+                                              String profileURL = snapshot
+                                                  .data.docs.first
+                                                  .get("profileURL");
+
+                                              return CachedNetworkImage(
+                                                imageUrl: profileURL,
+                                                imageBuilder:
+                                                    (context, imageProvider) =>
+                                                        CircleAvatar(
+                                                  backgroundImage:
+                                                      imageProvider,
+                                                ),
+                                                placeholder: (context, url) =>
+                                                    CircleAvatar(
+                                                        child: Center(
+                                                            child:
+                                                                CircularProgressIndicator())),
+                                                errorWidget:
+                                                    (context, url, error) =>
+                                                        Icon(Icons.error),
+                                              );
+                                            }
+                                            return CircleAvatar(
+                                                child: Text(
+                                                    usernameOfRecentChats[0]
+                                                        .toUpperCase()));
+                                          }
+                                          return CircleAvatar(
+                                              child: Text(
+                                                  usernameOfRecentChats[0]
+                                                      .toUpperCase()));
+                                        },
                                       ),
                                       SizedBox(width: 10),
                                       Expanded(

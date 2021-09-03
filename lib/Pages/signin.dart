@@ -31,6 +31,7 @@ class _SignInState extends State<SignIn> {
         }
       });
     } catch (e) {
+      log("getUsername failed");
       log(e.toString());
       return null;
     }
@@ -46,9 +47,10 @@ class _SignInState extends State<SignIn> {
       String username = await getUserName(emailController.text);
 
       log(await HelperFunctions.getUserEmailSharedPreference());
-      log(await HelperFunctions.getUserNameSharedPreference());
+      // log(await HelperFunctions.getUserNameSharedPreference());
 
       if (username != null) {
+        log("User Present");
         await HelperFunctions.saveUserNameSharedPreference(username);
         final auth = Provider.of<AuthMethods>(context, listen: false);
         auth
@@ -64,7 +66,7 @@ class _SignInState extends State<SignIn> {
                 builder: (BuildContext context) {
                   return AlertDialog(
                     title: Text(
-                      "Error",
+                      "",
                       style: TextStyle(color: Colors.red),
                     ),
                     content: Text(
@@ -80,11 +82,10 @@ class _SignInState extends State<SignIn> {
                     ],
                   );
                 });
-          } else {
-          }
-        }
-        );
+          } else {}
+        });
       } else {
+        log("User Absent");
         showDialog(
             context: context,
             builder: (BuildContext context) {
@@ -93,7 +94,8 @@ class _SignInState extends State<SignIn> {
                   "Error",
                   style: TextStyle(color: Colors.red),
                 ),
-                content: Text("Your email or password was incorrect. Please try again."),
+                content: Text(
+                    "Your email or password was incorrect. Please try again."),
                 actions: <Widget>[
                   FlatButton(
                       color: Color(0xff4081EC),
