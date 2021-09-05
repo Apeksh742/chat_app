@@ -362,26 +362,25 @@ class _ConversationScreenState extends State<ConversationScreen> {
                                   'dd-MM-yyyy')
                               .format(msg.created?.toDate() ?? DateTime.now())
                               .toString(),
+                          reverse: true,
                           groupComparator: (String value1, String value2)
                               // value2.compareTo(value1),
                               {
-                            int date1 = int.parse(value1.substring(0, 2));
-                            int date2 = int.parse(value2.substring(0, 2));
-                            if (date1 < date2) {
-                              return -1;
-                            } else if (date1 > date2) {
-                              return 1;
-                            } else {
-                              return 0;
-                            }
+                            String convertedDate1 = value1.substring(6, 10) +
+                                "-" +
+                                value1.substring(3, 5) +
+                                "-" +
+                                value1.substring(0, 2);
+                            String convertedDate2 = value2.substring(6, 10) +
+                                "-" +
+                                value2.substring(3, 5) +
+                                "-" +
+                                value2.substring(0, 2);
+                            DateTime date1 = DateTime.parse(convertedDate1);
+                            DateTime date2 = DateTime.parse(convertedDate2);
+                            return date2.compareTo(date1);
                           },
-                          // itemComparator:
-                          //     (MessageModel msg1, MessageModel msg2) => msg1
-                          //         .created?.toDate() ?? DateTime.now()
-                          //         .compareTo(msg2.created?.toDate() ?? DateTime.now()),
-                          // msg1.message.compareTo(msg2.message),
                           order: GroupedListOrder.ASC,
-                          reverse: true,
                           // floatingHeader: true,
                           useStickyGroupSeparators: true,
                           groupSeparatorBuilder: (String value) => Padding(

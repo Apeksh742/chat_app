@@ -173,260 +173,268 @@ class _EditProfileState extends State<EditProfile> {
         ],
       ),
       body: SafeArea(
-        child: SingleChildScrollView(
-          child: Column(
-            children: [
-              Padding(
-                  padding:
-                      const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
-                  child: Consumer<MyUser>(builder: (ctx, myUser, child) {
-                    return Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        SizedBox(
-                          height: _height * 0.01,
-                        ),
-                        Container(
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Align(
-                                alignment: Alignment.center,
-                                child: Column(
-                                  children: [
-                                    StreamBuilder<QuerySnapshot>(
-                                        stream: database
-                                            .getProfile(currentUser.uid),
-                                        builder: (BuildContext ctx,
-                                            AsyncSnapshot<QuerySnapshot>
-                                                snapshot) {
-                                          devlog.log(
-                                              "Stream Builder Profile Called");
-                                          if (snapshot.hasData) {
-                                            Map<String, dynamic> data =
-                                                snapshot.data.docs.first.data();
-                                            if (data
-                                                .containsKey("profileURL")) {
-                                              String profileURL = snapshot
-                                                  .data.docs.first
-                                                  .get("profileURL");
-                                              devlog.log(profileURL);
-                                              return CachedNetworkImage(
-                                                imageUrl: profileURL,
-                                                imageBuilder:
-                                                    (context, imageProvider) =>
-                                                        Container(
-                                                  width: 100.0,
-                                                  height: 100.0,
-                                                  decoration: BoxDecoration(
-                                                    shape: BoxShape.circle,
-                                                    image: DecorationImage(
-                                                        image: imageProvider,
-                                                        fit: BoxFit.cover),
+        child: RefreshIndicator(
+          onRefresh: () {
+            return database.getProfileData(currentUser.uid);
+          },
+          child: SingleChildScrollView(
+            child: Column(
+              children: [
+                Padding(
+                    padding: const EdgeInsets.symmetric(
+                        horizontal: 16, vertical: 10),
+                    child: Consumer<MyUser>(builder: (ctx, myUser, child) {
+                      return Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          SizedBox(
+                            height: _height * 0.01,
+                          ),
+                          Container(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Align(
+                                  alignment: Alignment.center,
+                                  child: Column(
+                                    children: [
+                                      FutureBuilder<QuerySnapshot>(
+                                          future: database
+                                              .getProfileData(currentUser.uid),
+                                          builder: (BuildContext ctx,
+                                              AsyncSnapshot<QuerySnapshot>
+                                                  snapshot) {
+                                            devlog.log(
+                                                "Stream Builder Profile Called");
+                                            if (snapshot.hasData) {
+                                              Map<String, dynamic> data =
+                                                  snapshot.data.docs.first
+                                                      .data();
+                                              if (data
+                                                  .containsKey("profileURL")) {
+                                                String profileURL = snapshot
+                                                    .data.docs.first
+                                                    .get("profileURL");
+                                                devlog.log(profileURL);
+                                                return CachedNetworkImage(
+                                                  imageUrl: profileURL,
+                                                  imageBuilder: (context,
+                                                          imageProvider) =>
+                                                      Container(
+                                                    width: 100.0,
+                                                    height: 100.0,
+                                                    decoration: BoxDecoration(
+                                                      shape: BoxShape.circle,
+                                                      image: DecorationImage(
+                                                          image: imageProvider,
+                                                          fit: BoxFit.cover),
+                                                    ),
                                                   ),
-                                                ),
-                                                placeholder: (context, url) =>
-                                                    Container(
-                                                        height: 100,
-                                                        width: 100,
-                                                        child: Center(
-                                                            child:
-                                                                LoadingIndicator(
-                                                          indicatorType: Indicator
-                                                              .circleStrokeSpin,
-                                                        ))),
-                                                errorWidget:
-                                                    (context, url, error) =>
-                                                        Icon(Icons.error),
+                                                  placeholder: (context, url) =>
+                                                      Container(
+                                                          height: 100,
+                                                          width: 100,
+                                                          child: Center(
+                                                              child:
+                                                                  LoadingIndicator(
+                                                            indicatorType: Indicator
+                                                                .circleStrokeSpin,
+                                                          ))),
+                                                  errorWidget:
+                                                      (context, url, error) =>
+                                                          Icon(Icons.error),
+                                                );
+                                              }
+
+                                              return CircleAvatar(
+                                                radius: 40,
+                                                child: Icon(Icons.person,
+                                                    size: 30),
+                                              );
+                                            } else {
+                                              return CircleAvatar(
+                                                radius: 40,
+                                                child: Icon(Icons.person,
+                                                    size: 30),
                                               );
                                             }
-
-                                            return CircleAvatar(
-                                              radius: 40,
-                                              child:
-                                                  Icon(Icons.person, size: 30),
-                                            );
-                                          } else {
-                                            return CircleAvatar(
-                                              radius: 40,
-                                              child:
-                                                  Icon(Icons.person, size: 30),
-                                            );
-                                          }
-                                        }),
-                                    SizedBox(
-                                      height: _height * 0.02,
-                                    ),
-                                    GestureDetector(
-                                      onTap: () async {
-                                        _showPicker(context);
-                                      },
-                                      child: Text(
-                                        "Change Profile Photo",
-                                        style: GoogleFonts.poppins(
-                                            color: Colors.blue),
+                                          }),
+                                      SizedBox(
+                                        height: _height * 0.02,
                                       ),
-                                    )
-                                  ],
-                                ),
-                              ),
-                              SizedBox(
-                                height: _height * 0.02,
-                              ),
-                              Text(
-                                "Your Email",
-                                style: GoogleFonts.poppins(color: Colors.grey),
-                              ),
-                              TextFormField(
-                                enabled: false,
-                                initialValue: myUser.email,
-                              ),
-                            ],
-                          ),
-                        ),
-                        SizedBox(
-                          height: _height * 0.02,
-                        ),
-                        Container(
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text(
-                                "Username",
-                                style: GoogleFonts.poppins(color: Colors.grey),
-                              ),
-                              TextFormField(
-                                enabled: false,
-                                initialValue: myUser.username,
-                              ),
-                            ],
-                          ),
-                        ),
-                        SizedBox(
-                          height: _height * 0.02,
-                        ),
-                        Container(
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text(
-                                "Date of Birth",
-                                style: GoogleFonts.poppins(color: Colors.grey),
-                              ),
-                              SizedBox(height: _height * 0.02),
-                              Row(
-                                mainAxisAlignment:
-                                    MainAxisAlignment.spaceBetween,
-                                children: [
-                                  FutureBuilder<QuerySnapshot>(
-                                    future: database
-                                        .getProfileData(currentUser.uid),
-                                    builder: (BuildContext context,
-                                        AsyncSnapshot<QuerySnapshot> snapshot) {
-                                      if (snapshot.hasData) {
-                                        Map<String, dynamic> data =
-                                            snapshot.data.docs.first.data();
-                                        if (data.containsKey("DOB")) {
-                                          dateOfBirth = data["DOB"];
-                                          return Text(
-                                            dateOfBirth.split(' ')[0],
-                                            style: TextStyle(fontSize: 16),
-                                          );
-                                        }
-                                        return LoadingIndicator(
-                                            indicatorType:
-                                                Indicator.circleStrokeSpin);
-                                      }
-                                      return Text("Select DOB");
-                                    },
+                                      GestureDetector(
+                                        onTap: () async {
+                                          _showPicker(context);
+                                        },
+                                        child: Text(
+                                          "Change Profile Photo",
+                                          style: GoogleFonts.poppins(
+                                              color: Colors.blue),
+                                        ),
+                                      )
+                                    ],
                                   ),
-                                  // Padding(
-                                  //   padding: const EdgeInsets.only(right: 16),
-                                  //   child: RaisedButton(
-                                  //     onPressed: () {
-                                  //       _selectDate(context);
-                                  //       setState(() {
-                                  //         dateOfBirth =
-                                  //             selectedDate.toLocal().toString();
-                                  //       });
-                                  //     },
-                                  //     child: Text('Change DOB'),
-                                  //   ),
-                                  // ),
-                                ],
-                              ),
-                            ],
+                                ),
+                                SizedBox(
+                                  height: _height * 0.02,
+                                ),
+                                Text(
+                                  "Your Email",
+                                  style:
+                                      GoogleFonts.poppins(color: Colors.grey),
+                                ),
+                                TextFormField(
+                                  enabled: false,
+                                  initialValue: myUser.email,
+                                ),
+                              ],
+                            ),
                           ),
-                        ),
-                        SizedBox(
-                          height: _height * 0.02,
-                        ),
-                        // CSCPicker(
-                        //   showStates: true,
-                        //   showCities: true,
-                        //   flagState: CountryFlag.SHOW_IN_DROP_DOWN_ONLY,
+                          SizedBox(
+                            height: _height * 0.02,
+                          ),
+                          Container(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  "Username",
+                                  style:
+                                      GoogleFonts.poppins(color: Colors.grey),
+                                ),
+                                TextFormField(
+                                  enabled: false,
+                                  initialValue: myUser.username,
+                                ),
+                              ],
+                            ),
+                          ),
+                          SizedBox(
+                            height: _height * 0.02,
+                          ),
+                          // Container(
+                          //   child: Column(
+                          //     crossAxisAlignment: CrossAxisAlignment.start,
+                          //     children: [
+                          //       Text(
+                          //         "Date of Birth",
+                          //         style: GoogleFonts.poppins(color: Colors.grey),
+                          //       ),
+                          //       SizedBox(height: _height * 0.02),
+                          //       Row(
+                          //         mainAxisAlignment:
+                          //             MainAxisAlignment.spaceBetween,
+                          //         children: [
+                          //           FutureBuilder<QuerySnapshot>(
+                          //             future: database
+                          //                 .getProfileData(currentUser.uid),
+                          //             builder: (BuildContext context,
+                          //                 AsyncSnapshot<QuerySnapshot> snapshot) {
+                          //               if (snapshot.hasData) {
+                          //                 Map<String, dynamic> data =
+                          //                     snapshot.data.docs.first.data();
+                          //                 if (data.containsKey("DOB")) {
+                          //                   dateOfBirth = data["DOB"];
+                          //                   return Text(
+                          //                     dateOfBirth.split(' ')[0],
+                          //                     style: TextStyle(fontSize: 16),
+                          //                   );
+                          //                 }
+                          //                 return LoadingIndicator(
+                          //                     indicatorType:
+                          //                         Indicator.circleStrokeSpin);
+                          //               }
+                          //               return Text("Select DOB");
+                          //             },
+                          //           ),
+                          //           // Padding(
+                          //           //   padding: const EdgeInsets.only(right: 16),
+                          //           //   child: RaisedButton(
+                          //           //     onPressed: () {
+                          //           //       _selectDate(context);
+                          //           //       setState(() {
+                          //           //         dateOfBirth =
+                          //           //             selectedDate.toLocal().toString();
+                          //           //       });
+                          //           //     },
+                          //           //     child: Text('Change DOB'),
+                          //           //   ),
+                          //           // ),
+                          //         ],
+                          //       ),
+                          //     ],
+                          //   ),
+                          // ),
+                          SizedBox(
+                            height: _height * 0.02,
+                          ),
+                          // CSCPicker(
+                          //   showStates: true,
+                          //   showCities: true,
+                          //   flagState: CountryFlag.SHOW_IN_DROP_DOWN_ONLY,
 
-                        //   onCountryChanged: (value) {
-                        //     setState(() {
-                        //       ///store value in country variable
-                        //       countryValue = value;
-                        //     });
-                        //   },
+                          //   onCountryChanged: (value) {
+                          //     setState(() {
+                          //       ///store value in country variable
+                          //       countryValue = value;
+                          //     });
+                          //   },
 
-                        //   ///triggers once state selected in dropdown
-                        //   onStateChanged: (value) {
-                        //     setState(() {
-                        //       ///store value in state variable
-                        //       stateValue = value;
-                        //     });
-                        //   },
+                          //   ///triggers once state selected in dropdown
+                          //   onStateChanged: (value) {
+                          //     setState(() {
+                          //       ///store value in state variable
+                          //       stateValue = value;
+                          //     });
+                          //   },
 
-                        //   ///triggers once city selected in dropdown
-                        //   onCityChanged: (value) {
-                        //     setState(() {
-                        //       ///store value in city variable
-                        //       cityValue = value;
-                        //     });
-                        //   },
-                        // )
-                        // Container(
-                        //   child: Column(
-                        //     crossAxisAlignment: CrossAxisAlignment.start,
-                        //     children: [
-                        //       Text(
-                        //         "Your City",
-                        //         style: GoogleFonts.poppins(color: Colors.grey),
-                        //       ),
-                        //       TextFormField(
-                        //         initialValue: "Enter City",
-                        //       ),
-                        //     ],
-                        //   ),
-                        // ),
-                        // SizedBox(
-                        //   height: _height * 0.02,
-                        // ),
-                        // Container(
-                        //   child: Column(
-                        //     crossAxisAlignment: CrossAxisAlignment.start,
-                        //     children: [
-                        //       Text(
-                        //         "Your Country",
-                        //         style: GoogleFonts.poppins(color: Colors.grey),
-                        //       ),
-                        //       TextFormField(
-                        //         initialValue: "Enter Country",
-                        //       ),
-                        //     ],
-                        //   ),
-                        // )
-                      ],
-                    );
-                  })),
-              SizedBox(
-                height: _height * 0.02,
-              ),
-            ],
+                          //   ///triggers once city selected in dropdown
+                          //   onCityChanged: (value) {
+                          //     setState(() {
+                          //       ///store value in city variable
+                          //       cityValue = value;
+                          //     });
+                          //   },
+                          // )
+                          // Container(
+                          //   child: Column(
+                          //     crossAxisAlignment: CrossAxisAlignment.start,
+                          //     children: [
+                          //       Text(
+                          //         "Your City",
+                          //         style: GoogleFonts.poppins(color: Colors.grey),
+                          //       ),
+                          //       TextFormField(
+                          //         initialValue: "Enter City",
+                          //       ),
+                          //     ],
+                          //   ),
+                          // ),
+                          // SizedBox(
+                          //   height: _height * 0.02,
+                          // ),
+                          // Container(
+                          //   child: Column(
+                          //     crossAxisAlignment: CrossAxisAlignment.start,
+                          //     children: [
+                          //       Text(
+                          //         "Your Country",
+                          //         style: GoogleFonts.poppins(color: Colors.grey),
+                          //       ),
+                          //       TextFormField(
+                          //         initialValue: "Enter Country",
+                          //       ),
+                          //     ],
+                          //   ),
+                          // )
+                        ],
+                      );
+                    })),
+                SizedBox(
+                  height: _height * 0.02,
+                ),
+              ],
+            ),
           ),
         ),
       ),

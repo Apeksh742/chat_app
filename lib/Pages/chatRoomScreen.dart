@@ -279,190 +279,205 @@ class _ChatRoomState extends State<ChatRoom> with WidgetsBindingObserver {
         child: Icon(Icons.search),
       ),
       body: SafeArea(
-          child: Container(
-        padding: EdgeInsets.all(8),
-        child: StreamBuilder(
-            stream: databaseMethods
-                .recentChatsStreams(auth.getCurrentUser().displayName),
-            builder: (BuildContext context, AsyncSnapshot snapshot) {
-              print(
-                  "Stream Builder Recent Chat Users called : ${snapshot.connectionState}");
-              if (snapshot.connectionState == ConnectionState.active) {
-                List<QueryDocumentSnapshot> recentChatList = snapshot.data.docs;
-                print("Recent Chat Query Document Snapshot: $recentChatList");
-                print("user_username : ${auth.getCurrentUser().displayName}");
-                String chatRoomId;
-                return ListView.builder(
-                    itemCount: recentChatList.length,
-                    itemBuilder: (context, index) {
-                      print(recentChatList[index].data());
-                      // List queryData = recentChatList[index].get("users");
-                      // String usernameOfRecentChats =
-                      //     getUsernamesOfRecentConversations(queryData);
-                      chatRoomId = recentChatList[index].get('chatRoomId');
-                      print(chatRoomId);
-                      return StreamBuilder(
-                          stream: databaseMethods
-                              .checkForFirstConversation(chatRoomId),
-                          builder: (context, checkorFirstConversationsnapshot) {
-                            if (checkorFirstConversationsnapshot.hasData) {
-                              print(
-                                  "check for first message: ${checkorFirstConversationsnapshot.data.docs.length}");
-                              if (checkorFirstConversationsnapshot
-                                      .data.docs.length !=
-                                  0)
+          child: RefreshIndicator(
+        onRefresh: () {
+           
+          return databaseMethods.getProfileData(currentUser.uid);
+        },
+        child: Container(
+          padding: EdgeInsets.all(8),
+          child: StreamBuilder(
+              stream: databaseMethods
+                  .recentChatsStreams(auth.getCurrentUser().displayName),
+              builder: (BuildContext context, AsyncSnapshot snapshot) {
+                print(
+                    "Stream Builder Recent Chat Users called : ${snapshot.connectionState}");
+                if (snapshot.connectionState == ConnectionState.active) {
+                  List<QueryDocumentSnapshot> recentChatList =
+                      snapshot.data.docs;
+                  print("Recent Chat Query Document Snapshot: $recentChatList");
+                  print("user_username : ${auth.getCurrentUser().displayName}");
+                  String chatRoomId;
+                  return ListView.builder(
+                      itemCount: recentChatList.length,
+                      itemBuilder: (context, index) {
+                        print(recentChatList[index].data());
+                        // List queryData = recentChatList[index].get("users");
+                        // String usernameOfRecentChats =
+                        //     getUsernamesOfRecentConversations(queryData);
+                        chatRoomId = recentChatList[index].get('chatRoomId');
+                        print(chatRoomId);
+                        return StreamBuilder(
+                            stream: databaseMethods
+                                .checkForFirstConversation(chatRoomId),
+                            builder:
+                                (context, checkorFirstConversationsnapshot) {
+                              if (checkorFirstConversationsnapshot.hasData) {
                                 print(
-                                    "data of first message: ${checkorFirstConversationsnapshot.data.docs[0].data()}");
-                              if (checkorFirstConversationsnapshot
-                                      .data.docs.length !=
-                                  0) {
-                                print(checkorFirstConversationsnapshot
-                                    .data.docs[0]
-                                    .get('users'));
-                                print(getUsernamesOfRecentConversations(
-                                    checkorFirstConversationsnapshot
-                                        .data.docs[0]
-                                        .get('users')));
-                                String usernameOfRecentChats =
-                                    getUsernamesOfRecentConversations(
-                                        checkorFirstConversationsnapshot
-                                            .data.docs[0]
-                                            .get('users'));
-                                return InkWell(
-                                  onTap: () {
-                                    print(usernameOfRecentChats);
-                                    Navigator.push(
-                                        context,
-                                        MaterialPageRoute(
-                                            builder: (context) =>
-                                                ConversationScreen(
-                                                  chatRoomId:
-                                                      recentChatList[index]
-                                                          .get('chatRoomId'),
-                                                  receiverName:
-                                                      usernameOfRecentChats,
-                                                )));
-                                  },
-                                  child: Padding(
-                                    padding: const EdgeInsets.all(8.0),
-                                    child: Row(children: [
-                                      // CircleAvatar(//TODO:
-                                      //   backgroundColor: Colors
-                                      //       .primaries[Random().nextInt(15)],
-                                      //   child: Icon(Icons.person),
-                                      // ),
-                                      FutureBuilder<QuerySnapshot>(
-                                        future:
-                                            databaseMethods.findUserbyUsername(
-                                                usernameOfRecentChats),
-                                        builder: (BuildContext context,
-                                            AsyncSnapshot<QuerySnapshot>
-                                                snapshot) {
-                                          if (snapshot.hasData) {
-                                            Map<String, dynamic> data =
-                                                snapshot.data.docs.first.data();
-                                            if (data
-                                                .containsKey("profileURL")) {
-                                              String profileURL = snapshot
-                                                  .data.docs.first
-                                                  .get("profileURL");
+                                    "check for first message: ${checkorFirstConversationsnapshot.data.docs.length}");
+                                if (checkorFirstConversationsnapshot
+                                        .data.docs.length !=
+                                    0)
+                                  print(
+                                      "data of first message: ${checkorFirstConversationsnapshot.data.docs[0].data()}");
+                                if (checkorFirstConversationsnapshot
+                                        .data.docs.length !=
+                                    0) {
+                                  print(checkorFirstConversationsnapshot
+                                      .data.docs[0]
+                                      .get('users'));
+                                  print(getUsernamesOfRecentConversations(
+                                      checkorFirstConversationsnapshot
+                                          .data.docs[0]
+                                          .get('users')));
+                                  String usernameOfRecentChats =
+                                      getUsernamesOfRecentConversations(
+                                          checkorFirstConversationsnapshot
+                                              .data.docs[0]
+                                              .get('users'));
+                                  return InkWell(
+                                    onTap: () {
+                                      print(usernameOfRecentChats);
+                                      Navigator.push(
+                                          context,
+                                          MaterialPageRoute(
+                                              builder: (context) =>
+                                                  ConversationScreen(
+                                                    chatRoomId:
+                                                        recentChatList[index]
+                                                            .get('chatRoomId'),
+                                                    receiverName:
+                                                        usernameOfRecentChats,
+                                                  )));
+                                    },
+                                    child: Padding(
+                                      padding: const EdgeInsets.all(8.0),
+                                      child: Row(children: [
+                                        // CircleAvatar(
+                                        //   //TODO:
+                                        //   backgroundColor: Colors
+                                        //       .primaries[Random().nextInt(15)],
+                                        //   child: Icon(Icons.person),
+                                        // ),
 
-                                              return CachedNetworkImage(
-                                                imageUrl: profileURL,
-                                                imageBuilder:
-                                                    (context, imageProvider) =>
-                                                        CircleAvatar(
-                                                  backgroundImage:
-                                                      imageProvider,
-                                                ),
-                                                placeholder: (context, url) =>
-                                                    CircleAvatar(
-                                                        child: Center(
-                                                            child:
-                                                                CircularProgressIndicator())),
-                                                errorWidget:
-                                                    (context, url, error) =>
-                                                        Icon(Icons.error),
-                                              );
+                                        FutureBuilder<QuerySnapshot>(
+                                          future: databaseMethods
+                                              .findUserbyUsername(
+                                                  usernameOfRecentChats),
+                                          builder: (BuildContext context,
+                                              AsyncSnapshot<QuerySnapshot>
+                                                  snapshot) {
+                                            if (snapshot.hasData) {
+                                              Map<String, dynamic> data =
+                                                  snapshot.data.docs.first
+                                                      .data();
+
+                                              if (data
+                                                  .containsKey("profileURL")) {
+                                                String profileURL = snapshot
+                                                    .data.docs.first
+                                                    .get("profileURL");
+                                                // developerlog.log(profileURL);
+                                                return CachedNetworkImage(
+                                                  imageUrl: profileURL,
+                                                  imageBuilder: (context,
+                                                          imageProvider) =>
+                                                      CircleAvatar(
+                                                    backgroundImage:
+                                                        imageProvider,
+                                                  ),
+                                                  placeholder: (context, url) =>
+                                                      CircleAvatar(
+                                                          child: Center(
+                                                              child:
+                                                                  CircularProgressIndicator())),
+                                                  errorWidget:
+                                                      (context, url, error) =>
+                                                          Icon(Icons.error),
+                                                );
+                                              }
+                                              return CircleAvatar(
+                                                  child: Text(
+                                                      usernameOfRecentChats[0]
+                                                          .toUpperCase()));
                                             }
                                             return CircleAvatar(
                                                 child: Text(
                                                     usernameOfRecentChats[0]
                                                         .toUpperCase()));
-                                          }
-                                          return CircleAvatar(
-                                              child: Text(
-                                                  usernameOfRecentChats[0]
-                                                      .toUpperCase()));
-                                        },
-                                      ),
-                                      SizedBox(width: 10),
-                                      Expanded(
-                                        child: Container(
-                                            child: Column(
-                                          crossAxisAlignment:
-                                              CrossAxisAlignment.start,
-                                          children: [
-                                            Text(
-                                              "$usernameOfRecentChats" ?? "",
-                                              style: TextStyle(
-                                                  fontSize: 17,
-                                                  fontWeight: FontWeight.w500),
-                                            ),
-                                            Builder(
-                                                builder: (BuildContext ctx) {
-                                              String
-                                                  chatRoomidToAvoidOverriding =
-                                                  recentChatList[index]
-                                                      .get('chatRoomId');
-                                              print(
-                                                  "ChatRoom ID: $chatRoomidToAvoidOverriding");
-                                              var documentData =
-                                                  checkorFirstConversationsnapshot
-                                                      .data.docs[0];
-                                              print(
-                                                  "Current message : ${documentData.get('message')}");
-                                              if (documentData.get("isPhoto") !=
-                                                  true) {
-                                                return Text(
-                                                  documentData.get("message") ??
-                                                      '',
-                                                  maxLines: 1,
-                                                );
-                                              } else if (documentData
-                                                      .get("isPhoto") ==
-                                                  true) {
-                                                return Row(children: [
-                                                  Icon(
-                                                    Icons.photo,
-                                                    color: Colors.grey,
-                                                  ),
-                                                  Text(" Photo")
-                                                ]);
-                                              } else
-                                                return Container();
-                                            })
-                                          ],
-                                        )),
-                                      )
-                                    ]),
-                                  ),
-                                );
+                                          },
+                                        ),
+                                        SizedBox(width: 10),
+                                        Expanded(
+                                          child: Container(
+                                              child: Column(
+                                            crossAxisAlignment:
+                                                CrossAxisAlignment.start,
+                                            children: [
+                                              Text(
+                                                "$usernameOfRecentChats" ?? "",
+                                                style: TextStyle(
+                                                    fontSize: 17,
+                                                    fontWeight:
+                                                        FontWeight.w500),
+                                              ),
+                                              Builder(
+                                                  builder: (BuildContext ctx) {
+                                                String
+                                                    chatRoomidToAvoidOverriding =
+                                                    recentChatList[index]
+                                                        .get('chatRoomId');
+                                                print(
+                                                    "ChatRoom ID: $chatRoomidToAvoidOverriding");
+                                                var documentData =
+                                                    checkorFirstConversationsnapshot
+                                                        .data.docs[0];
+                                                print(
+                                                    "Current message : ${documentData.get('message')}");
+                                                if (documentData
+                                                        .get("isPhoto") !=
+                                                    true) {
+                                                  return Text(
+                                                    documentData
+                                                            .get("message") ??
+                                                        '',
+                                                    maxLines: 1,
+                                                  );
+                                                } else if (documentData
+                                                        .get("isPhoto") ==
+                                                    true) {
+                                                  return Row(children: [
+                                                    Icon(
+                                                      Icons.photo,
+                                                      color: Colors.grey,
+                                                    ),
+                                                    Text(" Photo")
+                                                  ]);
+                                                } else
+                                                  return Container();
+                                              })
+                                            ],
+                                          )),
+                                        )
+                                      ]),
+                                    ),
+                                  );
+                                } else {
+                                  return Container();
+                                }
                               } else {
                                 return Container();
                               }
-                            } else {
-                              return Container();
-                            }
-                          });
-                    });
-              } else {
-                return Container(
-                    child: Center(
-                  child: CircularProgressIndicator(),
-                ));
-              }
-            }),
+                            });
+                      });
+                } else {
+                  return Container(
+                      child: Center(
+                    child: CircularProgressIndicator(),
+                  ));
+                }
+              }),
+        ),
       )),
     );
   }
