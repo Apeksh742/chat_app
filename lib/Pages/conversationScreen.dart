@@ -240,14 +240,6 @@ class _ConversationScreenState extends State<ConversationScreen> {
     if (gallery) {
       pickedFile =
           await picker.getImage(source: ImageSource.gallery, imageQuality: 70);
-    }
-    // Otherwise open camera to get new photo
-    else {
-      pickedFile =
-          await picker.getImage(source: ImageSource.camera, imageQuality: 70);
-    }
-
-    setState(() {
       if (pickedFile != null) {
         // _images.add(File(pickedFile.path));
         _image = File(pickedFile.path); // Use if you only need a single picture
@@ -261,6 +253,40 @@ class _ConversationScreenState extends State<ConversationScreen> {
       } else {
         print('No image selected.');
       }
+    }
+    // Otherwise open camera to get new photo
+    else {
+      pickedFile =
+          await picker.getImage(source: ImageSource.camera, imageQuality: 70);
+      if (pickedFile != null) {
+        // _images.add(File(pickedFile.path));
+        _image = File(pickedFile.path); // Use if you only need a single picture
+        Navigator.push(ctx, MaterialPageRoute(builder: (ctx) {
+          return PreviewPage(
+            file: _image,
+            chatRoomId: widget.chatRoomId,
+            receiverName: widget.receiverName,
+          );
+        }));
+      } else {
+        print('No image selected.');
+      }
+    }
+
+    setState(() {
+      // if (pickedFile != null) {
+      //   // _images.add(File(pickedFile.path));
+      //   _image = File(pickedFile.path); // Use if you only need a single picture
+      //   Navigator.push(ctx, MaterialPageRoute(builder: (ctx) {
+      //     return PreviewPage(
+      //       file: _image,
+      //       chatRoomId: widget.chatRoomId,
+      //       receiverName: widget.receiverName,
+      //     );
+      //   }));
+      // } else {
+      //   print('No image selected.');
+      // }
     });
   }
 
