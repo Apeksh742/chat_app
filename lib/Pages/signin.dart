@@ -3,6 +3,7 @@ import 'dart:developer';
 import 'package:chat_app/Pages/signup.dart';
 import 'package:chat_app/Widget/widget.dart';
 import 'package:chat_app/helper/helperfunctions.dart';
+import 'package:chat_app/modal/user.dart';
 import 'package:chat_app/services/authMethods.dart';
 import 'package:chat_app/services/databasemethod.dart';
 import 'package:flutter/material.dart';
@@ -43,6 +44,7 @@ class _SignInState extends State<SignIn> {
       setState(() {
         isLoading = true;
       });
+      final myuser = Provider.of<MyUser>(context, listen: false);
       await HelperFunctions.saveUserEmailSharedPreference(emailController.text);
       String username = await getUserName(emailController.text);
 

@@ -2,14 +2,17 @@ import 'dart:developer';
 
 import 'package:chat_app/Pages/chatRoomScreen.dart';
 import 'package:chat_app/Pages/signin.dart';
+import 'package:chat_app/Pages/splashScreen.dart';
+import 'package:chat_app/modal/user.dart';
 import 'package:chat_app/services/authMethods.dart';
+import 'package:chat_app/services/databasemethod.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
 class Authenticate extends StatelessWidget {
-  const Authenticate({Key key}) : super(key: key);
+  Authenticate({Key key}) : super(key: key);
 
   @override
   Widget build(BuildContext context) {
@@ -19,12 +22,16 @@ class Authenticate extends StatelessWidget {
           if (snapshot.connectionState != ConnectionState.active) {
             return Scaffold(body: Center(child: CircularProgressIndicator()));
           }
-          final user = snapshot.data;
+          final User user = snapshot.data;
 
-          if (user != null) {
+          if (user != null)  {
             log("User Present");
-            Future.delayed(Duration(seconds: 1));
-            return ChatRoom();
+            // final userProvider = Provider.of<MyUser>(context,listen: false);
+            // final data =  databaseMethods.getUserDetails(user.uid);
+            // log(data.toString());
+            // userProvider.upDateUser(userId: user.uid, email: user.email);
+            // Future.delayed(Duration(seconds: 10));
+            return SplashScreen();
           } else {
             return SignIn();
           }

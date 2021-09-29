@@ -5,12 +5,18 @@ class MyUser extends ChangeNotifier {
   String email;
   String username;
   String dob;
+  String profileURL;
 
-  upDateUser(String userId, String email, String username) {
+  upDateUser(
+      {String userId, String email, String username, String profileURL}) {
     this.userId = userId;
     this.email = email;
     this.username = username;
-    notifyListeners();
+    this.profileURL = profileURL;
+  }
+
+  updateProfile({String profileURL}) {
+    this.profileURL = profileURL;
   }
 
   updateDOB(String dob) {

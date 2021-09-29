@@ -25,6 +25,7 @@ class ChatRoom extends StatefulWidget {
 class _ChatRoomState extends State<ChatRoom> with WidgetsBindingObserver {
   DatabaseMethods databaseMethods = DatabaseMethods();
   User currentUser;
+  MyUser userInfo;
   List<String> myusers = []; //List of all users which help while serching users
   @override
   void initState() {
@@ -41,6 +42,7 @@ class _ChatRoomState extends State<ChatRoom> with WidgetsBindingObserver {
     });
     WidgetsBinding.instance.addObserver(this);
     print("initState called");
+    userInfo = Provider.of<MyUser>(context,listen: false);
 
     print('Current user name init state : ${currentUser.displayName}');
   }
@@ -80,9 +82,9 @@ class _ChatRoomState extends State<ChatRoom> with WidgetsBindingObserver {
   void updateUserAndGetListOfAllUsers() async {
     developerlog.log(await HelperFunctions.getUserNameSharedPreference());
     developerlog.log(await HelperFunctions.getUserEmailSharedPreference());
-    final myuser = Provider.of<MyUser>(context, listen: false);
-    myuser.upDateUser(
-        currentUser.uid, currentUser.email, currentUser.displayName);
+    // final myuser = Provider.of<MyUser>(context, listen: false);
+    // myuser.upDateUser(
+    //     userId: currentUser.uid, email: currentUser.email, username: currentUser.displayName,);
     print('update User successfully');
 
     databaseMethods.getAllUsers().then((value) => value.docs.forEach((element) {
@@ -107,96 +109,110 @@ class _ChatRoomState extends State<ChatRoom> with WidgetsBindingObserver {
           padding: EdgeInsets.zero,
           children: <Widget>[
             UserAccountsDrawerHeader(
-                accountName: FutureBuilder(
-                  future: HelperFunctions.getUserNameSharedPreference(),
-                  builder: (BuildContext context, AsyncSnapshot snapshot) {
-                    if (snapshot.hasData) {
-                      return Text(snapshot.data ?? "");
-                    }
-                    return LoadingIndicator(indicatorType: Indicator.ballPulse);
-                  },
-                ),
-                accountEmail: FutureBuilder(
-                  future: HelperFunctions.getUserEmailSharedPreference(),
-                  builder: (BuildContext context, AsyncSnapshot snapshot) {
-                    if (snapshot.hasData) {
-                      return Text(snapshot.data ?? "");
-                    }
-                    return LoadingIndicator(indicatorType: Indicator.ballPulse);
-                  },
-                ),
-                currentAccountPicture: FutureBuilder<QuerySnapshot>(
-                    future: databaseMethods.getProfileData(currentUser.uid),
-                    builder: (BuildContext ctx,
-                        AsyncSnapshot<QuerySnapshot> snapshot) {
-                      if (snapshot.hasData) {
-                        Map<String, dynamic> data =
-                            snapshot.data.docs.first.data();
-                        if (data.containsKey("profileURL")) {
-                          String profileURL =
-                              snapshot.data.docs.first.get("profileURL");
-
-                          return CachedNetworkImage(
-                            imageUrl: profileURL,
-                            imageBuilder: (context, imageProvider) => Container(
-                              width: 100.0,
-                              height: 100.0,
-                              decoration: BoxDecoration(
-                                shape: BoxShape.circle,
-                                image: DecorationImage(
-                                    image: imageProvider, fit: BoxFit.cover),
+                accountName: Consumer<MyUser>(builder: (context,usermodel, child){
+                  return Text(userInfo.username);
+                }),
+                accountEmail: Consumer<MyUser>(builder: (context,usermodel, child){
+                   return Text(userInfo.email);
+                }),
+                currentAccountPicture: Consumer<MyUser>(builder: (context,usermodel, child){
+                  return  CachedNetworkImage(
+                              imageUrl: userInfo.profileURL,
+                              imageBuilder: (context, imageProvider) => Container(
+                                width: 100.0,
+                                height: 100.0,
+                                decoration: BoxDecoration(
+                                  shape: BoxShape.circle,
+                                  image: DecorationImage(
+                                      image: imageProvider, fit: BoxFit.cover),
+                                ),
                               ),
-                            ),
-                            placeholder: (context, url) => Container(
-                                height: 100,
-                                width: 100,
-                                child: Center(
-                                    child: LoadingIndicator(
-                                  indicatorType: Indicator.circleStrokeSpin,
-                                ))),
-                            errorWidget: (context, url, error) =>
-                                Icon(Icons.error),
-                          );
-                        }
+                              placeholder: (context, url) => Container(
+                                  height: 100,
+                                  width: 100,
+                                  child: Center(
+                                      child: LoadingIndicator(
+                                    indicatorType: Indicator.circleStrokeSpin,
+                                  ))),
+                              errorWidget: (context, url, error) =>
+                                  Icon(Icons.error),
+                            );
+                
+                }
+                   )),
 
-                        return CircleAvatar(
-                          backgroundColor: Colors.red,
-                          child: FutureBuilder(
-                            future:
-                                HelperFunctions.getUserNameSharedPreference(),
-                            builder:
-                                (BuildContext context, AsyncSnapshot snapshot) {
-                              if (snapshot.hasData) {
-                                return Text(
-                                  (snapshot.data[0] ?? ""),
-                                  style: TextStyle(fontSize: 40.0),
-                                );
-                              }
-                              return Container();
-                            },
-                          ),
-                        );
-                      } else {
-                        return CircleAvatar(
-                          backgroundColor: Colors.red,
-                          child: FutureBuilder(
-                            future:
-                                HelperFunctions.getUserNameSharedPreference(),
-                            builder:
-                                (BuildContext context, AsyncSnapshot snapshot) {
-                              if (snapshot.hasData) {
-                                return Text(
-                                  (snapshot.data[0] ?? ""),
-                                  style: TextStyle(fontSize: 40.0),
-                                );
-                              }
-                              return Container();
-                            },
-                          ),
-                        );
-                      }
-                    })),
-            // Consumer<MyUser>(builder: (context, myUser, child) {
+            //      FutureBuilder<QuerySnapshot>(
+            //         future: databaseMethods.getProfileData(currentUser.uid),
+            //         builder: (BuildContext ctx,
+            //             AsyncSnapshot<QuerySnapshot> snapshot) {
+            //           if (snapshot.hasData) {
+            //             Map<String, dynamic> data =
+            //                 snapshot.data.docs.first.data();
+            //             if (data.containsKey("profileURL")) {
+            //               String profileURL =
+            //                   snapshot.data.docs.first.get("profileURL");
+
+            //               return CachedNetworkImage(
+            //                 imageUrl: profileURL,
+            //                 imageBuilder: (context, imageProvider) => Container(
+            //                   width: 100.0,
+            //                   height: 100.0,
+            //                   decoration: BoxDecoration(
+            //                     shape: BoxShape.circle,
+            //                     image: DecorationImage(
+            //                         image: imageProvider, fit: BoxFit.cover),
+            //                   ),
+            //                 ),
+            //                 placeholder: (context, url) => Container(
+            //                     height: 100,
+            //                     width: 100,
+            //                     child: Center(
+            //                         child: LoadingIndicator(
+            //                       indicatorType: Indicator.circleStrokeSpin,
+            //                     ))),
+            //                 errorWidget: (context, url, error) =>
+            //                     Icon(Icons.error),
+            //               );
+            //             }
+
+            //             return CircleAvatar(
+            //               backgroundColor: Colors.red,
+            //               child: FutureBuilder(
+            //                 future:
+            //                     HelperFunctions.getUserNameSharedPreference(),
+            //                 builder:
+            //                     (BuildContext context, AsyncSnapshot snapshot) {
+            //                   if (snapshot.hasData) {
+            //                     return Text(
+            //                       (snapshot.data[0] ?? ""),
+            //                       style: TextStyle(fontSize: 40.0),
+            //                     );
+            //                   }
+            //                   return Container();
+            //                 },
+            //               ),
+            //             );
+            //           } else {
+            //             return CircleAvatar(
+            //               backgroundColor: Colors.red,
+            //               child: FutureBuilder(
+            //                 future:
+            //                     HelperFunctions.getUserNameSharedPreference(),
+            //                 builder:
+            //                     (BuildContext context, AsyncSnapshot snapshot) {
+            //                   if (snapshot.hasData) {
+            //                     return Text(
+            //                       (snapshot.data[0] ?? ""),
+            //                       style: TextStyle(fontSize: 40.0),
+            //                     );
+            //                   }
+            //                   return Container();
+            //                 },
+            //               ),
+            //             );
+            //           }
+            //         })),
+            // // Consumer<MyUser>(builder: (context, myUser, child) {
             //   return UserAccountsDrawerHeader(
             //     accountName: Text(myUser.username ?? ""),
             //     accountEmail: Text(myUser.email ?? ""),
@@ -281,7 +297,6 @@ class _ChatRoomState extends State<ChatRoom> with WidgetsBindingObserver {
       body: SafeArea(
           child: RefreshIndicator(
         onRefresh: () {
-           
           return databaseMethods.getProfileData(currentUser.uid);
         },
         child: Container(

@@ -12,6 +12,10 @@ class DatabaseMethods {
     });
   }
 
+  // Future<DocumentSnapshot<Map<String, dynamic>>> getUserDetails(String uid) async{
+  //   return await FirebaseFirestore.instance.collection("Users").doc(uid).get().catchError((e) {print(e.toString());});
+  // }
+
   Future<QuerySnapshot> findUserByEmail(String email) async {
    try{
       return await FirebaseFirestore.instance

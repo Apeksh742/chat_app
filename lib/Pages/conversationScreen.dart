@@ -324,38 +324,77 @@ class _ConversationScreenState extends State<ConversationScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
+        automaticallyImplyLeading: false,
+        titleSpacing: 0,
+        title: Row(
           children: [
-            Text(widget.receiverName),
-            StreamBuilder<QuerySnapshot>(
-              stream: databaseMethods.checkUserStatus(widget.receiverName),
+            IconButton(
+                onPressed: () => Navigator.pop(context),
+                icon: Icon(Icons.arrow_back)),
+            FutureBuilder<QuerySnapshot>(
+              future: databaseMethods.findUserbyUsername(widget.receiverName),
               builder: (BuildContext context,
                   AsyncSnapshot<QuerySnapshot> snapshot) {
                 if (snapshot.hasData) {
-                  bool status = snapshot.data.docs.first.get("status");
-                  return Container(
-                      child: status
-                          ? Text(
-                              "Online",
-                              style: TextStyle(fontSize: 12),
-                            )
-                          : Text("Offline", style: TextStyle(fontSize: 12)));
-                } else {
-                  return Container();
+                  Map<String, dynamic> data = snapshot.data.docs.first.data();
+
+                  if (data.containsKey("profileURL")) {
+                    String profileURL =
+                        snapshot.data.docs.first.get("profileURL");
+                    // developerlog.log(profileURL);
+                    return CachedNetworkImage(
+                      imageUrl: profileURL,
+                      imageBuilder: (context, imageProvider) => CircleAvatar(
+                        backgroundImage: imageProvider,
+                      ),
+                      placeholder: (context, url) => CircleAvatar(
+                          child: Center(child: CircularProgressIndicator())),
+                      errorWidget: (context, url, error) => Icon(Icons.error),
+                    );
+                  }
+                  return CircleAvatar(
+                      child: Text(widget.receiverName[0].toUpperCase()));
                 }
+                return CircleAvatar(
+                    child: Text(widget.receiverName[0].toUpperCase()));
               },
+            ),
+            SizedBox(width: 10),
+            Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(widget.receiverName),
+                StreamBuilder<QuerySnapshot>(
+                  stream: databaseMethods.checkUserStatus(widget.receiverName),
+                  builder: (BuildContext context,
+                      AsyncSnapshot<QuerySnapshot> snapshot) {
+                    if (snapshot.hasData) {
+                      bool status = snapshot.data.docs.first.get("status");
+                      return Container(
+                          child: status
+                              ? Text(
+                                  "Online",
+                                  style: TextStyle(fontSize: 12),
+                                )
+                              : Text("Offline",
+                                  style: TextStyle(fontSize: 12)));
+                    } else {
+                      return Container();
+                    }
+                  },
+                ),
+              ],
             ),
           ],
         ),
-        actions: [
-          IconButton(
-              icon: Icon(
-                Icons.more_vert,
-              ),
-              onPressed: () {}),
-        ],
+        // actions: [
+        //   IconButton(
+        //       icon: Icon(
+        //         Icons.more_vert,
+        //       ),
+        //       onPressed: () {}),
+        // ],
       ),
       body: GestureDetector(
         onTap: () {

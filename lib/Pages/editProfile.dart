@@ -37,8 +37,9 @@ class _EditProfileState extends State<EditProfile> {
       firebase_storage.FirebaseStorage.instance;
   FirebaseFirestore firestoreInstance = FirebaseFirestore.instance;
 
-  Future<void> saveImages(File _image) async {
-    String imageURL = await uploadFile(_image);
+  Future<void> saveImages(File _image, BuildContext context) async {
+    String imageURL = await uploadFile(_image, context);
+
     database.updateProfilePicture({"profileURL": imageURL}, currentUser.uid);
   }
 
@@ -55,7 +56,7 @@ class _EditProfileState extends State<EditProfile> {
       });
   }
 
-  Future<String> uploadFile(File _image) async {
+  Future<String> uploadFile(File _image, BuildContext context) async {
     String downloadURL;
     firebase_storage.Reference storageReference =
         storageInstance.ref().child('uploads/${basename(_image.path)}');
@@ -67,6 +68,8 @@ class _EditProfileState extends State<EditProfile> {
     await storageReference.getDownloadURL().then((fileURL) {
       downloadURL = fileURL;
     });
+    final userInfo = Provider.of<MyUser>(context, listen: false);
+    userInfo.updateProfile(profileURL: downloadURL);
     return downloadURL;
   }
 
@@ -99,7 +102,6 @@ class _EditProfileState extends State<EditProfile> {
     setState(() {
       if (pickedFile != null) {
         _image = File(pickedFile[0].path);
-        saveImages(_image);
       } else {
         print('No image selected.');
       }
@@ -140,6 +142,8 @@ class _EditProfileState extends State<EditProfile> {
   Widget build(BuildContext context) {
     final _width = MediaQuery.of(context).size.width;
     final _height = MediaQuery.of(context).size.height;
+    
+    // devlog.log(_image.toString());
     return Scaffold(
       appBar: AppBar(
         elevation: 0,
@@ -160,9 +164,10 @@ class _EditProfileState extends State<EditProfile> {
             padding: const EdgeInsets.only(right: 16),
             child: InkWell(
                 onTap: () async {
-                  await database.updateProfileData({
-                    "DOB": selectedDate.toString(),
-                  }, currentUser.uid);
+                  if (_image != null) {
+                    await saveImages(_image, context);
+                    
+                  }
                   final snackBar = SnackBar(
                     content: const Text('Profile Updated Succesfully'),
                   );
@@ -190,6 +195,8 @@ class _EditProfileState extends State<EditProfile> {
                           SizedBox(
                             height: _height * 0.01,
                           ),
+                          // _image == null
+                          // ?
                           Container(
                             child: Column(
                               crossAxisAlignment: CrossAxisAlignment.start,
@@ -198,67 +205,79 @@ class _EditProfileState extends State<EditProfile> {
                                   alignment: Alignment.center,
                                   child: Column(
                                     children: [
-                                      FutureBuilder<QuerySnapshot>(
-                                          future: database
-                                              .getProfileData(currentUser.uid),
-                                          builder: (BuildContext ctx,
-                                              AsyncSnapshot<QuerySnapshot>
-                                                  snapshot) {
-                                            devlog.log(
-                                                "Stream Builder Profile Called");
-                                            if (snapshot.hasData) {
-                                              Map<String, dynamic> data =
-                                                  snapshot.data.docs.first
-                                                      .data();
-                                              if (data
-                                                  .containsKey("profileURL")) {
-                                                String profileURL = snapshot
-                                                    .data.docs.first
-                                                    .get("profileURL");
-                                                devlog.log(profileURL);
-                                                return CachedNetworkImage(
-                                                  imageUrl: profileURL,
-                                                  imageBuilder: (context,
-                                                          imageProvider) =>
-                                                      Container(
-                                                    width: 100.0,
-                                                    height: 100.0,
-                                                    decoration: BoxDecoration(
-                                                      shape: BoxShape.circle,
-                                                      image: DecorationImage(
-                                                          image: imageProvider,
-                                                          fit: BoxFit.cover),
-                                                    ),
-                                                  ),
-                                                  placeholder: (context, url) =>
-                                                      Container(
-                                                          height: 100,
-                                                          width: 100,
-                                                          child: Center(
-                                                              child:
-                                                                  LoadingIndicator(
-                                                            indicatorType: Indicator
-                                                                .circleStrokeSpin,
-                                                          ))),
-                                                  errorWidget:
-                                                      (context, url, error) =>
+                                      _image == null
+                                          ? FutureBuilder<QuerySnapshot>(
+                                              future: database.getProfileData(
+                                                  currentUser.uid),
+                                              builder: (BuildContext ctx,
+                                                  AsyncSnapshot<QuerySnapshot>
+                                                      snapshot) {
+                                                devlog.log(
+                                                    "Future Builder Profile Called");
+                                                if (snapshot.hasData) {
+                                                  Map<String, dynamic> data =
+                                                      snapshot.data.docs.first
+                                                          .data();
+                                                  if (data.containsKey(
+                                                      "profileURL")) {
+                                                    String profileURL = snapshot
+                                                        .data.docs.first
+                                                        .get("profileURL");
+                                                    devlog.log(profileURL);
+                                                    return CachedNetworkImage(
+                                                      imageUrl: profileURL,
+                                                      imageBuilder: (context,
+                                                              imageProvider) =>
+                                                          Container(
+                                                        width: 100.0,
+                                                        height: 100.0,
+                                                        decoration:
+                                                            BoxDecoration(
+                                                          shape:
+                                                              BoxShape.circle,
+                                                          image: DecorationImage(
+                                                              image:
+                                                                  imageProvider,
+                                                              fit:
+                                                                  BoxFit.cover),
+                                                        ),
+                                                      ),
+                                                      placeholder: (context,
+                                                              url) =>
+                                                          Container(
+                                                              height: 100,
+                                                              width: 100,
+                                                              child: Center(
+                                                                  child:
+                                                                      LoadingIndicator(
+                                                                indicatorType:
+                                                                    Indicator
+                                                                        .circleStrokeSpin,
+                                                              ))),
+                                                      errorWidget: (context,
+                                                              url, error) =>
                                                           Icon(Icons.error),
-                                                );
-                                              }
+                                                    );
+                                                  }
 
-                                              return CircleAvatar(
-                                                radius: 40,
-                                                child: Icon(Icons.person,
-                                                    size: 30),
-                                              );
-                                            } else {
-                                              return CircleAvatar(
-                                                radius: 40,
-                                                child: Icon(Icons.person,
-                                                    size: 30),
-                                              );
-                                            }
-                                          }),
+                                                  return CircleAvatar(
+                                                    radius: 40,
+                                                    child: Icon(Icons.person,
+                                                        size: 30),
+                                                  );
+                                                } else {
+                                                  return CircleAvatar(
+                                                    radius: 40,
+                                                    child: Icon(Icons.person,
+                                                        size: 30),
+                                                  );
+                                                }
+                                              })
+                                          : CircleAvatar(
+                                              radius: 40,
+                                              backgroundImage:
+                                                  FileImage(_image),
+                                            ),
                                       SizedBox(
                                         height: _height * 0.02,
                                       ),
@@ -290,6 +309,7 @@ class _EditProfileState extends State<EditProfile> {
                               ],
                             ),
                           ),
+
                           SizedBox(
                             height: _height * 0.02,
                           ),
