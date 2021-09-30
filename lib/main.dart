@@ -39,11 +39,6 @@ class MyApp extends StatelessWidget {
         debugShowCheckedModeBanner: false,
         home: Authenticate(),
       ),
-      //   child:
-      //   AuthWidgetBuilder(builder: (context,userSnapshot) => MaterialApp(
-      //    debugShowCheckedModeBanner: false,
-      //    home: AuthWidget(userSnapshot: userSnapshot,)
-      //  )),
     );
   }
 }

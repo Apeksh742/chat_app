@@ -1,6 +1,7 @@
 import 'dart:developer';
 
 import 'package:chat_app/Pages/chatRoomScreen.dart';
+import 'package:chat_app/Pages/registerProfile.dart';
 import 'package:chat_app/Pages/signin.dart';
 import 'package:chat_app/Widget/widget.dart';
 import 'package:chat_app/helper/helperfunctions.dart';
@@ -39,13 +40,15 @@ class _SignUpState extends State<SignUp> {
             .then((user)async {
           if (user != null) {
             log("User created Succesfully");
-            await user.updateDisplayName(username);
-            await HelperFunctions.saveUserEmailSharedPreference(emailController.text);
-            await HelperFunctions.saveUserNameSharedPreference(usernameController.text);
+            final userProvider = Provider.of<MyUser>(context, listen: false);
+            userProvider.upDateUser(userId: user.uid, username: usernameController.text, email: emailController.text);
+            user.updateDisplayName(username);
+             HelperFunctions.saveUserEmailSharedPreference(emailController.text);
+             HelperFunctions.saveUserNameSharedPreference(usernameController.text);
             // setState(() {
             //   if (mounted) isLoading = false;
             // });
-            Navigator.pushReplacement(context, MaterialPageRoute(builder: (context)=> ChatRoom()));
+            Navigator.pushReplacement(context, MaterialPageRoute(builder: (context)=> RegisterProfile()));
             Map<String, dynamic> userInfo = {
               "Username": usernameController.text,
               "Email": user.email,

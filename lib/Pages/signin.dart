@@ -3,11 +3,16 @@ import 'dart:developer';
 import 'package:chat_app/Pages/signup.dart';
 import 'package:chat_app/Widget/widget.dart';
 import 'package:chat_app/helper/helperfunctions.dart';
+import 'package:chat_app/modal/user.dart';
 import 'package:chat_app/services/authMethods.dart';
 import 'package:chat_app/services/databasemethod.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:flutter/services.dart';
+
+import 'chatRoomScreen.dart';
 
 class SignIn extends StatefulWidget {
   @override
@@ -20,6 +25,7 @@ class _SignInState extends State<SignIn> {
   TextEditingController passwordController = TextEditingController();
   DatabaseMethods databaseMethods = DatabaseMethods();
   final formKey = GlobalKey<FormState>();
+  User currentUser;
 
   Future<String> getUserName(String email) async {
     try {
@@ -31,27 +37,33 @@ class _SignInState extends State<SignIn> {
         }
       });
     } catch (e) {
+      log("getUsername failed");
       log(e.toString());
       return null;
     }
     // HelperFunctions.saveUserNameSharedPreference(username)
   }
 
+  Future updateUserDetails() async {}
+
   signIn() async {
     if (formKey.currentState.validate()) {
       setState(() {
         isLoading = true;
       });
+      final myuser = Provider.of<MyUser>(context, listen: false);
       await HelperFunctions.saveUserEmailSharedPreference(emailController.text);
       String username = await getUserName(emailController.text);
 
       log(await HelperFunctions.getUserEmailSharedPreference());
-      log(await HelperFunctions.getUserNameSharedPreference());
+      // log(await HelperFunctions.getUserNameSharedPreference());
 
       if (username != null) {
+        log("User Present");
         await HelperFunctions.saveUserNameSharedPreference(username);
         final auth = Provider.of<AuthMethods>(context, listen: false);
-        auth
+
+        await auth
             .signInWithEmailAndPassword(
                 emailController.text, passwordController.text)
             .then((value) {
@@ -64,7 +76,7 @@ class _SignInState extends State<SignIn> {
                 builder: (BuildContext context) {
                   return AlertDialog(
                     title: Text(
-                      "Error",
+                      "",
                       style: TextStyle(color: Colors.red),
                     ),
                     content: Text(
@@ -81,10 +93,27 @@ class _SignInState extends State<SignIn> {
                   );
                 });
           } else {
+            currentUser = value;
           }
-        }
-        );
+        });
+        final userProvider = Provider.of<MyUser>(context, listen: false);
+
+        myuser.upDateUser(
+            userId: currentUser.uid,
+            email: currentUser.email,
+            username: currentUser.displayName);
+        final QuerySnapshot data =
+            await databaseMethods.findUserByEmail(currentUser.email);
+        myuser.upDateUser(
+            userId: currentUser.uid,
+            email: currentUser.email,
+            username: currentUser.displayName,
+            profileURL: data.docs.first.get("profileURL") ?? null);
+        print('update User successfully');
+        Navigator.pushAndRemoveUntil(context,
+            MaterialPageRoute(builder: (ctx) => ChatRoom()), (route) => false);
       } else {
+        log("User Absent");
         showDialog(
             context: context,
             builder: (BuildContext context) {
@@ -93,7 +122,8 @@ class _SignInState extends State<SignIn> {
                   "Error",
                   style: TextStyle(color: Colors.red),
                 ),
-                content: Text("Your email or password was incorrect. Please try again."),
+                content: Text(
+                    "Your email or password was incorrect. Please try again."),
                 actions: <Widget>[
                   FlatButton(
                       color: Color(0xff4081EC),

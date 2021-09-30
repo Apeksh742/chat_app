@@ -1,8 +1,11 @@
 import 'dart:developer' as developerlog;
 import 'dart:math';
 
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:chat_app/Pages/conversationScreen.dart';
+import 'package:chat_app/Pages/editProfile.dart';
 import 'package:chat_app/Pages/searchUser.dart';
+import 'package:chat_app/Pages/signin.dart';
 import 'package:chat_app/helper/helperfunctions.dart';
 import 'package:chat_app/modal/user.dart';
 import 'package:chat_app/services/authMethods.dart';
@@ -23,6 +26,7 @@ class ChatRoom extends StatefulWidget {
 class _ChatRoomState extends State<ChatRoom> with WidgetsBindingObserver {
   DatabaseMethods databaseMethods = DatabaseMethods();
   User currentUser;
+  MyUser userInfo;
   List<String> myusers = []; //List of all users which help while serching users
   @override
   void initState() {
@@ -39,7 +43,8 @@ class _ChatRoomState extends State<ChatRoom> with WidgetsBindingObserver {
     });
     WidgetsBinding.instance.addObserver(this);
     print("initState called");
-    
+    userInfo = Provider.of<MyUser>(context,listen: false);
+
     print('Current user name init state : ${currentUser.displayName}');
   }
 
@@ -77,10 +82,10 @@ class _ChatRoomState extends State<ChatRoom> with WidgetsBindingObserver {
 
   void updateUserAndGetListOfAllUsers() async {
     developerlog.log(await HelperFunctions.getUserNameSharedPreference());
-   developerlog.log(await HelperFunctions.getUserEmailSharedPreference());
-    final myuser = Provider.of<MyUser>(context,listen: false);
-    myuser.upDateUser(
-        currentUser.uid, currentUser.email, currentUser.displayName);
+    developerlog.log(await HelperFunctions.getUserEmailSharedPreference());
+    // final myuser = Provider.of<MyUser>(context, listen: false);
+    // myuser.upDateUser(
+    //     userId: currentUser.uid, email: currentUser.email, username: currentUser.displayName,);
     print('update User successfully');
 
     databaseMethods.getAllUsers().then((value) => value.docs.forEach((element) {
@@ -105,41 +110,110 @@ class _ChatRoomState extends State<ChatRoom> with WidgetsBindingObserver {
           padding: EdgeInsets.zero,
           children: <Widget>[
             UserAccountsDrawerHeader(
-                accountName: FutureBuilder(
-                  future: HelperFunctions.getUserNameSharedPreference(),
-                  builder: (BuildContext context, AsyncSnapshot snapshot) {
-                    if(snapshot.hasData){
-                      return Text(snapshot.data?? "") ;
-                    }
-                    return LoadingIndicator(indicatorType: Indicator.ballPulse);
-                  },
-                ),
-                accountEmail: FutureBuilder(
-                  future: HelperFunctions.getUserEmailSharedPreference(),
-                  builder: (BuildContext context, AsyncSnapshot snapshot) {
-                    if(snapshot.hasData){
-                      return Text(snapshot.data ?? "");
-                    }
-                    return LoadingIndicator(indicatorType: Indicator.ballPulse);
-                  },
-                ),
-                currentAccountPicture: CircleAvatar(
-                  backgroundColor: Colors.red,
-                  child: FutureBuilder(
-                    future: HelperFunctions.getUserNameSharedPreference(),
-                    builder: (BuildContext context, AsyncSnapshot snapshot) {
-                      if(snapshot.hasData){
-                        return Text(
-                    (snapshot.data[0] ?? ""),
-                    style: TextStyle(fontSize: 40.0),
-                  );
-                      }
-                      return Container();
-                    },
-                  ),
-                ),
-              ),
-            // Consumer<MyUser>(builder: (context, myUser, child) {
+                accountName: Consumer<MyUser>(builder: (context,usermodel, child){
+                  return Text(userInfo.username);
+                }),
+                accountEmail: Consumer<MyUser>(builder: (context,usermodel, child){
+                   return Text(userInfo.email);
+                }),
+                currentAccountPicture: Consumer<MyUser>(builder: (context,usermodel, child){
+                  return  CachedNetworkImage(
+                              imageUrl: userInfo.profileURL,
+                              imageBuilder: (context, imageProvider) => Container(
+                                width: 100.0,
+                                height: 100.0,
+                                decoration: BoxDecoration(
+                                  shape: BoxShape.circle,
+                                  image: DecorationImage(
+                                      image: imageProvider, fit: BoxFit.cover),
+                                ),
+                              ),
+                              placeholder: (context, url) => Container(
+                                  height: 100,
+                                  width: 100,
+                                  child: Center(
+                                      child: LoadingIndicator(
+                                    indicatorType: Indicator.circleStrokeSpin,
+                                  ))),
+                              errorWidget: (context, url, error) =>
+                                  Icon(Icons.error),
+                            );
+                
+                }
+                   )),
+
+            //      FutureBuilder<QuerySnapshot>(
+            //         future: databaseMethods.getProfileData(currentUser.uid),
+            //         builder: (BuildContext ctx,
+            //             AsyncSnapshot<QuerySnapshot> snapshot) {
+            //           if (snapshot.hasData) {
+            //             Map<String, dynamic> data =
+            //                 snapshot.data.docs.first.data();
+            //             if (data.containsKey("profileURL")) {
+            //               String profileURL =
+            //                   snapshot.data.docs.first.get("profileURL");
+
+            //               return CachedNetworkImage(
+            //                 imageUrl: profileURL,
+            //                 imageBuilder: (context, imageProvider) => Container(
+            //                   width: 100.0,
+            //                   height: 100.0,
+            //                   decoration: BoxDecoration(
+            //                     shape: BoxShape.circle,
+            //                     image: DecorationImage(
+            //                         image: imageProvider, fit: BoxFit.cover),
+            //                   ),
+            //                 ),
+            //                 placeholder: (context, url) => Container(
+            //                     height: 100,
+            //                     width: 100,
+            //                     child: Center(
+            //                         child: LoadingIndicator(
+            //                       indicatorType: Indicator.circleStrokeSpin,
+            //                     ))),
+            //                 errorWidget: (context, url, error) =>
+            //                     Icon(Icons.error),
+            //               );
+            //             }
+
+            //             return CircleAvatar(
+            //               backgroundColor: Colors.red,
+            //               child: FutureBuilder(
+            //                 future:
+            //                     HelperFunctions.getUserNameSharedPreference(),
+            //                 builder:
+            //                     (BuildContext context, AsyncSnapshot snapshot) {
+            //                   if (snapshot.hasData) {
+            //                     return Text(
+            //                       (snapshot.data[0] ?? ""),
+            //                       style: TextStyle(fontSize: 40.0),
+            //                     );
+            //                   }
+            //                   return Container();
+            //                 },
+            //               ),
+            //             );
+            //           } else {
+            //             return CircleAvatar(
+            //               backgroundColor: Colors.red,
+            //               child: FutureBuilder(
+            //                 future:
+            //                     HelperFunctions.getUserNameSharedPreference(),
+            //                 builder:
+            //                     (BuildContext context, AsyncSnapshot snapshot) {
+            //                   if (snapshot.hasData) {
+            //                     return Text(
+            //                       (snapshot.data[0] ?? ""),
+            //                       style: TextStyle(fontSize: 40.0),
+            //                     );
+            //                   }
+            //                   return Container();
+            //                 },
+            //               ),
+            //             );
+            //           }
+            //         })),
+            // // Consumer<MyUser>(builder: (context, myUser, child) {
             //   return UserAccountsDrawerHeader(
             //     accountName: Text(myUser.username ?? ""),
             //     accountEmail: Text(myUser.email ?? ""),
@@ -161,18 +235,13 @@ class _ChatRoomState extends State<ChatRoom> with WidgetsBindingObserver {
             ),
             ListTile(
               leading: Icon(Icons.settings),
-              title: Text("Settings"),
+              title: Text("Edit Profile"),
               onTap: () {
-                Navigator.pop(context);
+                Navigator.push(context,
+                    MaterialPageRoute(builder: (ctx) => EditProfile()));
               },
             ),
-            ListTile(
-              leading: Icon(Icons.contacts),
-              title: Text("Contact Us"),
-              onTap: () {
-                Navigator.pop(context);
-              },
-            ),
+
             ListTile(
               leading: Icon(Icons.exit_to_app),
               title: Text("Log Out"),
@@ -193,7 +262,7 @@ class _ChatRoomState extends State<ChatRoom> with WidgetsBindingObserver {
                           FlatButton(
                               color: Color(0xff4081EC),
                               colorBrightness: Brightness.dark,
-                              onPressed: () {
+                              onPressed: ()async {
                                 Navigator.pop(context);
                                 final myuser =
                                     Provider.of<MyUser>(context, listen: false);
@@ -202,7 +271,8 @@ class _ChatRoomState extends State<ChatRoom> with WidgetsBindingObserver {
                                 }, myuser.userId);
                                 final auth = Provider.of<AuthMethods>(context,
                                     listen: false);
-                                auth.signOut();
+                               auth.signOut();
+                               Navigator.pushAndRemoveUntil(context, MaterialPageRoute(builder: (context)=> SignIn()), (route) => false);
                               },
                               child: Text("Log Out"))
                         ],
@@ -227,145 +297,204 @@ class _ChatRoomState extends State<ChatRoom> with WidgetsBindingObserver {
         child: Icon(Icons.search),
       ),
       body: SafeArea(
-          child: Container(
-        padding: EdgeInsets.all(8),
-        child: StreamBuilder(
-            stream: databaseMethods
-                .recentChatsStreams(auth.getCurrentUser().displayName),
-            builder: (BuildContext context, AsyncSnapshot snapshot) {
-              print(
-                  "Stream Builder Recent Chat Users called : ${snapshot.connectionState}");
-              if (snapshot.connectionState == ConnectionState.active) {
-                List<QueryDocumentSnapshot> recentChatList = snapshot.data.docs;
-                print("Recent Chat Query Document Snapshot: $recentChatList");
-                print("user_username : ${auth.getCurrentUser().displayName}");
-                String chatRoomId;
-                return ListView.builder(
-                    itemCount: recentChatList.length,
-                    itemBuilder: (context, index) {
-                      print(recentChatList[index].data());
-                      // List queryData = recentChatList[index].get("users");
-                      // String usernameOfRecentChats =
-                      //     getUsernamesOfRecentConversations(queryData);
-                      chatRoomId = recentChatList[index].get('chatRoomId');
-                      print(chatRoomId);
-                      return StreamBuilder(
-                          stream: databaseMethods
-                              .checkForFirstConversation(chatRoomId),
-                          builder: (context, checkorFirstConversationsnapshot) {
-                            if (checkorFirstConversationsnapshot.hasData) {
-                              print(
-                                  "check for first message: ${checkorFirstConversationsnapshot.data.docs.length}");
-                              if (checkorFirstConversationsnapshot
-                                      .data.docs.length !=
-                                  0)
+          child: RefreshIndicator(
+        onRefresh: () {
+          return databaseMethods.getProfileData(currentUser.uid);
+        },
+        child: Container(
+          padding: EdgeInsets.all(8),
+          child: StreamBuilder(
+              stream: databaseMethods
+                  .recentChatsStreams(auth.getCurrentUser().displayName),
+              builder: (BuildContext context, AsyncSnapshot snapshot) {
+                print(
+                    "Stream Builder Recent Chat Users called : ${snapshot.connectionState}");
+                if (snapshot.connectionState == ConnectionState.active) {
+                  List<QueryDocumentSnapshot> recentChatList =
+                      snapshot.data.docs;
+                  print("Recent Chat Query Document Snapshot: $recentChatList");
+                  print("user_username : ${auth.getCurrentUser().displayName}");
+                  String chatRoomId;
+                  return ListView.builder(
+                      itemCount: recentChatList.length,
+                      itemBuilder: (context, index) {
+                        print(recentChatList[index].data());
+                        // List queryData = recentChatList[index].get("users");
+                        // String usernameOfRecentChats =
+                        //     getUsernamesOfRecentConversations(queryData);
+                        chatRoomId = recentChatList[index].get('chatRoomId');
+                        print(chatRoomId);
+                        return StreamBuilder(
+                            stream: databaseMethods
+                                .checkForFirstConversation(chatRoomId),
+                            builder:
+                                (context, checkorFirstConversationsnapshot) {
+                              if (checkorFirstConversationsnapshot.hasData) {
                                 print(
-                                    "data of first message: ${checkorFirstConversationsnapshot.data.docs[0].data()}");
-                              if (checkorFirstConversationsnapshot
-                                      .data.docs.length !=
-                                  0) {
-                                print(checkorFirstConversationsnapshot
-                                    .data.docs[0]
-                                    .get('users'));
-                                print(getUsernamesOfRecentConversations(
-                                    checkorFirstConversationsnapshot
-                                        .data.docs[0]
-                                        .get('users')));
-                                String usernameOfRecentChats =
-                                    getUsernamesOfRecentConversations(
-                                        checkorFirstConversationsnapshot
-                                            .data.docs[0]
-                                            .get('users'));
-                                return InkWell(
-                                  onTap: () {
-                                    print(usernameOfRecentChats);
-                                    Navigator.push(
-                                        context,
-                                        MaterialPageRoute(
-                                            builder: (context) =>
-                                                ConversationScreen(
-                                                  chatRoomId:
-                                                      recentChatList[index]
-                                                          .get('chatRoomId'),
-                                                  receiverName:
-                                                      usernameOfRecentChats,
-                                                )));
-                                  },
-                                  child: Padding(
-                                    padding: const EdgeInsets.all(8.0),
-                                    child: Row(children: [
-                                      CircleAvatar(
-                                        backgroundColor: Colors
-                                            .primaries[Random().nextInt(15)],
-                                        child: Icon(Icons.person),
-                                      ),
-                                      SizedBox(width: 10),
-                                      Expanded(
-                                        child: Container(
-                                            child: Column(
-                                          crossAxisAlignment:
-                                              CrossAxisAlignment.start,
-                                          children: [
-                                            Text(
-                                              "$usernameOfRecentChats" ?? "",
-                                              style: TextStyle(
-                                                  fontSize: 17,
-                                                  fontWeight: FontWeight.w500),
-                                            ),
-                                            Builder(
-                                                builder: (BuildContext ctx) {
-                                              String
-                                                  chatRoomidToAvoidOverriding =
-                                                  recentChatList[index]
-                                                      .get('chatRoomId');
-                                              print(
-                                                  "ChatRoom ID: $chatRoomidToAvoidOverriding");
-                                              var documentData =
-                                                  checkorFirstConversationsnapshot
-                                                      .data.docs[0];
-                                              print(
-                                                  "Current message : ${documentData.get('message')}");
-                                              if (documentData.get("isPhoto") !=
-                                                  true) {
-                                                return Text(
-                                                  documentData.get("message") ??
-                                                      '',
-                                                  maxLines: 1,
-                                                );
-                                              } else if (documentData
-                                                      .get("isPhoto") ==
-                                                  true) {
-                                                return Row(children: [
-                                                  Icon(
-                                                    Icons.photo,
-                                                    color: Colors.grey,
+                                    "check for first message: ${checkorFirstConversationsnapshot.data.docs.length}");
+                                if (checkorFirstConversationsnapshot
+                                        .data.docs.length !=
+                                    0)
+                                  print(
+                                      "data of first message: ${checkorFirstConversationsnapshot.data.docs[0].data()}");
+                                if (checkorFirstConversationsnapshot
+                                        .data.docs.length !=
+                                    0) {
+                                  print(checkorFirstConversationsnapshot
+                                      .data.docs[0]
+                                      .get('users'));
+                                  print(getUsernamesOfRecentConversations(
+                                      checkorFirstConversationsnapshot
+                                          .data.docs[0]
+                                          .get('users')));
+                                  String usernameOfRecentChats =
+                                      getUsernamesOfRecentConversations(
+                                          checkorFirstConversationsnapshot
+                                              .data.docs[0]
+                                              .get('users'));
+                                  return InkWell(
+                                    onTap: () {
+                                      print(usernameOfRecentChats);
+                                      Navigator.push(
+                                          context,
+                                          MaterialPageRoute(
+                                              builder: (context) =>
+                                                  ConversationScreen(
+                                                    chatRoomId:
+                                                        recentChatList[index]
+                                                            .get('chatRoomId'),
+                                                    receiverName:
+                                                        usernameOfRecentChats,
+                                                  )));
+                                    },
+                                    child: Padding(
+                                      padding: const EdgeInsets.all(8.0),
+                                      child: Row(children: [
+                                        // CircleAvatar(
+                                        //   //TODO:
+                                        //   backgroundColor: Colors
+                                        //       .primaries[Random().nextInt(15)],
+                                        //   child: Icon(Icons.person),
+                                        // ),
+
+                                        FutureBuilder<QuerySnapshot>(
+                                          future: databaseMethods
+                                              .findUserbyUsername(
+                                                  usernameOfRecentChats),
+                                          builder: (BuildContext context,
+                                              AsyncSnapshot<QuerySnapshot>
+                                                  snapshot) {
+                                            if (snapshot.hasData) {
+                                              Map<String, dynamic> data =
+                                                  snapshot.data.docs.first
+                                                      .data();
+
+                                              if (data
+                                                  .containsKey("profileURL")) {
+                                                String profileURL = snapshot
+                                                    .data.docs.first
+                                                    .get("profileURL");
+                                                // developerlog.log(profileURL);
+                                                return CachedNetworkImage(
+                                                  imageUrl: profileURL,
+                                                  imageBuilder: (context,
+                                                          imageProvider) =>
+                                                      CircleAvatar(
+                                                    backgroundImage:
+                                                        imageProvider,
                                                   ),
-                                                  Text(" Photo")
-                                                ]);
-                                              } else
-                                                return Container();
-                                            })
-                                          ],
-                                        )),
-                                      )
-                                    ]),
-                                  ),
-                                );
+                                                  placeholder: (context, url) =>
+                                                      CircleAvatar(
+                                                          child: Center(
+                                                              child:
+                                                                  CircularProgressIndicator())),
+                                                  errorWidget:
+                                                      (context, url, error) =>
+                                                          Icon(Icons.error),
+                                                );
+                                              }
+                                              return CircleAvatar(
+                                                  child: Text(
+                                                      usernameOfRecentChats[0]
+                                                          .toUpperCase()));
+                                            }
+                                            return CircleAvatar(
+                                                child: Text(
+                                                    usernameOfRecentChats[0]
+                                                        .toUpperCase()));
+                                          },
+                                        ),
+                                        SizedBox(width: 10),
+                                        Expanded(
+                                          child: Container(
+                                              child: Column(
+                                            crossAxisAlignment:
+                                                CrossAxisAlignment.start,
+                                            children: [
+                                              Text(
+                                                "$usernameOfRecentChats" ?? "",
+                                                style: TextStyle(
+                                                    fontSize: 17,
+                                                    fontWeight:
+                                                        FontWeight.w500),
+                                              ),
+                                              Builder(
+                                                  builder: (BuildContext ctx) {
+                                                String
+                                                    chatRoomidToAvoidOverriding =
+                                                    recentChatList[index]
+                                                        .get('chatRoomId');
+                                                print(
+                                                    "ChatRoom ID: $chatRoomidToAvoidOverriding");
+                                                var documentData =
+                                                    checkorFirstConversationsnapshot
+                                                        .data.docs[0];
+                                                print(
+                                                    "Current message : ${documentData.get('message')}");
+                                                if (documentData
+                                                        .get("isPhoto") !=
+                                                    true) {
+                                                  return Text(
+                                                    documentData
+                                                            .get("message") ??
+                                                        '',
+                                                    maxLines: 1,
+                                                  );
+                                                } else if (documentData
+                                                        .get("isPhoto") ==
+                                                    true) {
+                                                  return Row(children: [
+                                                    Icon(
+                                                      Icons.photo,
+                                                      color: Colors.grey,
+                                                    ),
+                                                    Text(" Photo")
+                                                  ]);
+                                                } else
+                                                  return Container();
+                                              })
+                                            ],
+                                          )),
+                                        )
+                                      ]),
+                                    ),
+                                  );
+                                } else {
+                                  return Container();
+                                }
                               } else {
                                 return Container();
                               }
-                            } else {
-                              return Container();
-                            }
-                          });
-                    });
-              } else {
-                return Container(
-                    child: Center(
-                  child: CircularProgressIndicator(),
-                ));
-              }
-            }),
+                            });
+                      });
+                } else {
+                  return Container(
+                      child: Center(
+                    child: CircularProgressIndicator(),
+                  ));
+                }
+              }),
+        ),
       )),
     );
   }

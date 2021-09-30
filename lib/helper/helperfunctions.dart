@@ -24,4 +24,9 @@ class HelperFunctions{
     return pref.getString(sharedPreferenceUserEmailKey);
   }
 
+  static Future clearUserData()async{
+    SharedPreferences pref = await SharedPreferences.getInstance();
+    await pref.clear();
+  }
+
 }

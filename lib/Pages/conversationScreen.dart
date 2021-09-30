@@ -240,14 +240,6 @@ class _ConversationScreenState extends State<ConversationScreen> {
     if (gallery) {
       pickedFile =
           await picker.getImage(source: ImageSource.gallery, imageQuality: 70);
-    }
-    // Otherwise open camera to get new photo
-    else {
-      pickedFile =
-          await picker.getImage(source: ImageSource.camera, imageQuality: 70);
-    }
-
-    setState(() {
       if (pickedFile != null) {
         // _images.add(File(pickedFile.path));
         _image = File(pickedFile.path); // Use if you only need a single picture
@@ -261,6 +253,40 @@ class _ConversationScreenState extends State<ConversationScreen> {
       } else {
         print('No image selected.');
       }
+    }
+    // Otherwise open camera to get new photo
+    else {
+      pickedFile =
+          await picker.getImage(source: ImageSource.camera, imageQuality: 70);
+      if (pickedFile != null) {
+        // _images.add(File(pickedFile.path));
+        _image = File(pickedFile.path); // Use if you only need a single picture
+        Navigator.push(ctx, MaterialPageRoute(builder: (ctx) {
+          return PreviewPage(
+            file: _image,
+            chatRoomId: widget.chatRoomId,
+            receiverName: widget.receiverName,
+          );
+        }));
+      } else {
+        print('No image selected.');
+      }
+    }
+
+    setState(() {
+      // if (pickedFile != null) {
+      //   // _images.add(File(pickedFile.path));
+      //   _image = File(pickedFile.path); // Use if you only need a single picture
+      //   Navigator.push(ctx, MaterialPageRoute(builder: (ctx) {
+      //     return PreviewPage(
+      //       file: _image,
+      //       chatRoomId: widget.chatRoomId,
+      //       receiverName: widget.receiverName,
+      //     );
+      //   }));
+      // } else {
+      //   print('No image selected.');
+      // }
     });
   }
 
@@ -298,38 +324,77 @@ class _ConversationScreenState extends State<ConversationScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
+        automaticallyImplyLeading: false,
+        titleSpacing: 0,
+        title: Row(
           children: [
-            Text(widget.receiverName),
-            StreamBuilder<QuerySnapshot>(
-              stream: databaseMethods.checkUserStatus(widget.receiverName),
+            IconButton(
+                onPressed: () => Navigator.pop(context),
+                icon: Icon(Icons.arrow_back)),
+            FutureBuilder<QuerySnapshot>(
+              future: databaseMethods.findUserbyUsername(widget.receiverName),
               builder: (BuildContext context,
                   AsyncSnapshot<QuerySnapshot> snapshot) {
                 if (snapshot.hasData) {
-                  bool status = snapshot.data.docs.first.get("status");
-                  return Container(
-                      child: status
-                          ? Text(
-                              "Online",
-                              style: TextStyle(fontSize: 12),
-                            )
-                          : Text("Offline", style: TextStyle(fontSize: 12)));
-                } else {
-                  return Container();
+                  Map<String, dynamic> data = snapshot.data.docs.first.data();
+
+                  if (data.containsKey("profileURL")) {
+                    String profileURL =
+                        snapshot.data.docs.first.get("profileURL");
+                    // developerlog.log(profileURL);
+                    return CachedNetworkImage(
+                      imageUrl: profileURL,
+                      imageBuilder: (context, imageProvider) => CircleAvatar(
+                        backgroundImage: imageProvider,
+                      ),
+                      placeholder: (context, url) => CircleAvatar(
+                          child: Center(child: CircularProgressIndicator())),
+                      errorWidget: (context, url, error) => Icon(Icons.error),
+                    );
+                  }
+                  return CircleAvatar(
+                      child: Text(widget.receiverName[0].toUpperCase()));
                 }
+                return CircleAvatar(
+                    child: Text(widget.receiverName[0].toUpperCase()));
               },
+            ),
+            SizedBox(width: 10),
+            Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(widget.receiverName),
+                StreamBuilder<QuerySnapshot>(
+                  stream: databaseMethods.checkUserStatus(widget.receiverName),
+                  builder: (BuildContext context,
+                      AsyncSnapshot<QuerySnapshot> snapshot) {
+                    if (snapshot.hasData) {
+                      bool status = snapshot.data.docs.first.get("status");
+                      return Container(
+                          child: status
+                              ? Text(
+                                  "Online",
+                                  style: TextStyle(fontSize: 12),
+                                )
+                              : Text("Offline",
+                                  style: TextStyle(fontSize: 12)));
+                    } else {
+                      return Container();
+                    }
+                  },
+                ),
+              ],
             ),
           ],
         ),
-        actions: [
-          IconButton(
-              icon: Icon(
-                Icons.more_vert,
-              ),
-              onPressed: () {}),
-        ],
+        // actions: [
+        //   IconButton(
+        //       icon: Icon(
+        //         Icons.more_vert,
+        //       ),
+        //       onPressed: () {}),
+        // ],
       ),
       body: GestureDetector(
         onTap: () {
@@ -362,15 +427,25 @@ class _ConversationScreenState extends State<ConversationScreen> {
                                   'dd-MM-yyyy')
                               .format(msg.created?.toDate() ?? DateTime.now())
                               .toString(),
-                          groupComparator: (String value1, String value2) =>
-                              value2.compareTo(value1),
-                          // itemComparator:
-                          //     (MessageModel msg1, MessageModel msg2) => msg1
-                          //         .created?.toDate() ?? DateTime.now()
-                          //         .compareTo(msg2.created?.toDate() ?? DateTime.now()),
-                          // msg1.message.compareTo(msg2.message),
-                          order: GroupedListOrder.ASC,
                           reverse: true,
+                          groupComparator: (String value1, String value2)
+                              // value2.compareTo(value1),
+                              {
+                            String convertedDate1 = value1.substring(6, 10) +
+                                "-" +
+                                value1.substring(3, 5) +
+                                "-" +
+                                value1.substring(0, 2);
+                            String convertedDate2 = value2.substring(6, 10) +
+                                "-" +
+                                value2.substring(3, 5) +
+                                "-" +
+                                value2.substring(0, 2);
+                            DateTime date1 = DateTime.parse(convertedDate1);
+                            DateTime date2 = DateTime.parse(convertedDate2);
+                            return date2.compareTo(date1);
+                          },
+                          order: GroupedListOrder.ASC,
                           // floatingHeader: true,
                           useStickyGroupSeparators: true,
                           groupSeparatorBuilder: (String value) => Padding(
