@@ -2,6 +2,7 @@ import 'dart:developer' as developerlog;
 import 'dart:developer';
 
 import 'package:chat_app/Pages/chatRoomScreen.dart';
+import 'package:chat_app/Pages/signin.dart';
 import 'package:chat_app/helper/helperfunctions.dart';
 import 'package:chat_app/modal/user.dart';
 import 'package:chat_app/services/databasemethod.dart';
@@ -33,6 +34,7 @@ class _SplashScreenState extends State<SplashScreen> {
 
     final myuser = Provider.of<MyUser>(context, listen: false);
     currentUser = FirebaseAuth.instance.currentUser;
+    if(currentUser!= null){
     myuser.upDateUser(
         userId: currentUser.uid,
         email: currentUser.email,
@@ -49,7 +51,11 @@ class _SplashScreenState extends State<SplashScreen> {
         profileURL: data.docs.first.get("profileURL") ?? null);
     print('update User successfully');
     Navigator.pushAndRemoveUntil(context, MaterialPageRoute(builder: (ctx)=> ChatRoom()), (route) => false);
-
+    }
+    else{
+      Navigator.pushAndRemoveUntil(context,
+          MaterialPageRoute(builder: (ctx) => SignIn()), (route) => false);
+    }
     // databaseMethods
     //     .getAllUsers()
     //     .then((value) => value.docs.forEach((element) {
@@ -61,7 +67,7 @@ class _SplashScreenState extends State<SplashScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: Center(child: CircularProgressIndicator()),
+      body: Center(child: Image.asset("assets/logos/myChatLogo.png")),
     );
   }
 }

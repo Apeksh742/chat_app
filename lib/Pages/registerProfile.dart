@@ -163,8 +163,7 @@ class _RegisterProfileState extends State<RegisterProfile> {
             padding: const EdgeInsets.only(right: 16),
             child: InkWell(
                 onTap: () async {
-                 
-                     if (_image != null) {
+                  if (_image != null) {
                     setState(() {
                       isLoading = true;
                     });
@@ -173,14 +172,16 @@ class _RegisterProfileState extends State<RegisterProfile> {
                     setState(() {
                       isLoading = false;
                     });
-                    Navigator.pushAndRemoveUntil(context, MaterialPageRoute(builder: (context) => ChatRoom()), (route) => false);
-                        
-                  
-                  final snackBar = SnackBar(
-                    content: const Text('Profile Updated Succesfully'),
-                  );
-                  ScaffoldMessenger.of(context).showSnackBar(snackBar);
-                }
+                    Navigator.pushAndRemoveUntil(
+                        context,
+                        MaterialPageRoute(builder: (context) => ChatRoom()),
+                        (route) => false);
+
+                    final snackBar = SnackBar(
+                      content: const Text('Profile Updated Succesfully'),
+                    );
+                    ScaffoldMessenger.of(context).showSnackBar(snackBar);
+                  }
                 },
                 child: Icon(Icons.check, color: Colors.black)),
           )
