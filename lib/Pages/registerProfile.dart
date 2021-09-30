@@ -15,9 +15,10 @@ import 'package:provider/provider.dart';
 import 'package:firebase_storage/firebase_storage.dart' as firebase_storage;
 import 'package:path/path.dart';
 
+import 'chatRoomScreen.dart';
 
 class RegisterProfile extends StatefulWidget {
-  const RegisterProfile({ Key key }) : super(key: key);
+  const RegisterProfile({Key key}) : super(key: key);
 
   @override
   _RegisterProfileState createState() => _RegisterProfileState();
@@ -30,6 +31,7 @@ class _RegisterProfileState extends State<RegisterProfile> {
   String stateValue = "";
   String cityValue = "";
   String address = "";
+  bool isLoading = false;
   List<Media> pickedFile;
   User currentUser = FirebaseAuth.instance.currentUser;
   DatabaseMethods database = DatabaseMethods();
@@ -37,24 +39,25 @@ class _RegisterProfileState extends State<RegisterProfile> {
       firebase_storage.FirebaseStorage.instance;
   FirebaseFirestore firestoreInstance = FirebaseFirestore.instance;
 
-  Future<void> saveImages(File _image) async {
-    String imageURL = await uploadFile(_image);
+  Future<void> saveImages(File _image, BuildContext context) async {
+    String imageURL = await uploadFile(_image, context);
+
     database.updateProfilePicture({"profileURL": imageURL}, currentUser.uid);
   }
 
-  Future<void> _selectDate(BuildContext context) async {
-    final DateTime picked = await showDatePicker(
-        context: context,
-        initialDate: selectedDate,
-        firstDate: DateTime(1920, 1),
-        lastDate: DateTime.now());
-    if (picked != null && picked != selectedDate)
-      setState(() {
-        selectedDate = picked;
-      });
-  }
+  // Future<void> _selectDate(BuildContext context) async {
+  //   final DateTime picked = await showDatePicker(
+  //       context: context,
+  //       initialDate: selectedDate,
+  //       firstDate: DateTime(1920, 1),
+  //       lastDate: DateTime.now());
+  //   if (picked != null && picked != selectedDate)
+  //     setState(() {
+  //       selectedDate = picked;
+  //     });
+  // }
 
-  Future<String> uploadFile(File _image) async {
+  Future<String> uploadFile(File _image, BuildContext context) async {
     String downloadURL;
     firebase_storage.Reference storageReference =
         storageInstance.ref().child('uploads/${basename(_image.path)}');
@@ -66,6 +69,8 @@ class _RegisterProfileState extends State<RegisterProfile> {
     await storageReference.getDownloadURL().then((fileURL) {
       downloadURL = fileURL;
     });
+    final userInfo = Provider.of<MyUser>(context, listen: false);
+    userInfo.updateProfile(profileURL: downloadURL);
     return downloadURL;
   }
 
@@ -98,7 +103,6 @@ class _RegisterProfileState extends State<RegisterProfile> {
     setState(() {
       if (pickedFile != null) {
         _image = File(pickedFile[0].path);
-        saveImages(_image);
       } else {
         print('No image selected.');
       }
@@ -159,14 +163,24 @@ class _RegisterProfileState extends State<RegisterProfile> {
             padding: const EdgeInsets.only(right: 16),
             child: InkWell(
                 onTap: () async {
-                  await database.updateProfileData({
-                    "DOB": selectedDate.toString(),
-                    "Address": "$cityValue, $stateValue, $countryValue"
-                  }, currentUser.uid);
+                 
+                     if (_image != null) {
+                    setState(() {
+                      isLoading = true;
+                    });
+                    // await Future.delayed(Duration(seconds: 2));
+                    await saveImages(_image, context);
+                    setState(() {
+                      isLoading = false;
+                    });
+                    Navigator.pushAndRemoveUntil(context, MaterialPageRoute(builder: (context) => ChatRoom()), (route) => false);
+                        
+                  
                   final snackBar = SnackBar(
                     content: const Text('Profile Updated Succesfully'),
                   );
                   ScaffoldMessenger.of(context).showSnackBar(snackBar);
+                }
                 },
                 child: Icon(Icons.check, color: Colors.black)),
           )
@@ -194,52 +208,13 @@ class _RegisterProfileState extends State<RegisterProfile> {
                                 alignment: Alignment.center,
                                 child: Column(
                                   children: [
-                                    StreamBuilder<QuerySnapshot>(
-                                        stream: database
-                                            .getProfile(currentUser.uid),
-                                        builder: (BuildContext ctx,
-                                            AsyncSnapshot<QuerySnapshot>
-                                                snapshot) {
-                                          if (snapshot.hasData) {
-                                            String profileURL = snapshot
-                                                .data.docs.first
-                                                .get("profileURL");
-                                            return CachedNetworkImage(
-                                              imageUrl: profileURL,
-                                              imageBuilder:
-                                                  (context, imageProvider) =>
-                                                      Container(
-                                                width: 100.0,
-                                                height: 100.0,
-                                                decoration: BoxDecoration(
-                                                  shape: BoxShape.circle,
-                                                  image: DecorationImage(
-                                                      image: imageProvider,
-                                                      fit: BoxFit.cover),
-                                                ),
-                                              ),
-                                              placeholder: (context, url) =>
-                                                  Container(
-                                                      height: 100,
-                                                      width: 100,
-                                                      child: Center(
-                                                          child:
-                                                              LoadingIndicator(
-                                                        indicatorType: Indicator
-                                                            .circleStrokeSpin,
-                                                      ))),
-                                              errorWidget:
-                                                  (context, url, error) =>
-                                                      Icon(Icons.error),
-                                            );
-                                          } else {
-                                            return CircleAvatar(
-                                              radius: 40,
-                                              child:
-                                                  Icon(Icons.person, size: 30),
-                                            );
-                                          }
-                                        }),
+                                    CircleAvatar(
+                                      radius: 40,
+                                      backgroundImage: _image != null
+                                          ? FileImage(_image)
+                                          : NetworkImage(
+                                              "https://www.vippng.com/png/detail/416-4161690_empty-profile-picture-blank-avatar-image-circle.png"),
+                                    ),
                                     SizedBox(
                                       height: _height * 0.02,
                                     ),
@@ -248,7 +223,7 @@ class _RegisterProfileState extends State<RegisterProfile> {
                                         _showPicker(context);
                                       },
                                       child: Text(
-                                        "Change Profile Photo",
+                                        "Choose Profile Photo",
                                         style: GoogleFonts.poppins(
                                             color: Colors.blue),
                                       ),
@@ -291,38 +266,38 @@ class _RegisterProfileState extends State<RegisterProfile> {
                         SizedBox(
                           height: _height * 0.02,
                         ),
-                        Container(
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text(
-                                "Date of Birth",
-                                style: GoogleFonts.poppins(color: Colors.grey),
-                              ),
-                              SizedBox(height: _height * 0.02),
-                              Row(
-                                mainAxisAlignment:
-                                    MainAxisAlignment.spaceBetween,
-                                children: [
-                                  Text(
-                                    selectedDate
-                                        .toLocal()
-                                        .toString()
-                                        .split(' ')[0],
-                                    style: TextStyle(fontSize: 16),
-                                  ),
-                                  Padding(
-                                    padding: const EdgeInsets.only(right: 16),
-                                    child: RaisedButton(
-                                      onPressed: () => _selectDate(context),
-                                      child: Text('Change DOB'),
-                                    ),
-                                  ),
-                                ],
-                              ),
-                            ],
-                          ),
-                        ),
+                        // Container(
+                        //   child: Column(
+                        //     crossAxisAlignment: CrossAxisAlignment.start,
+                        //     children: [
+                        //       Text(
+                        //         "Date of Birth",
+                        //         style: GoogleFonts.poppins(color: Colors.grey),
+                        //       ),
+                        //       SizedBox(height: _height * 0.02),
+                        //       Row(
+                        //         mainAxisAlignment:
+                        //             MainAxisAlignment.spaceBetween,
+                        //         children: [
+                        //           Text(
+                        //             selectedDate
+                        //                 .toLocal()
+                        //                 .toString()
+                        //                 .split(' ')[0],
+                        //             style: TextStyle(fontSize: 16),
+                        //           ),
+                        //           Padding(
+                        //             padding: const EdgeInsets.only(right: 16),
+                        //             child: RaisedButton(
+                        //               onPressed: () => _selectDate(context),
+                        //               child: Text('Change DOB'),
+                        //             ),
+                        //           ),
+                        //         ],
+                        //       ),
+                        //     ],
+                        //   ),
+                        // ),
                         SizedBox(
                           height: _height * 0.02,
                         ),

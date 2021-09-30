@@ -5,6 +5,7 @@ import 'package:cached_network_image/cached_network_image.dart';
 import 'package:chat_app/Pages/conversationScreen.dart';
 import 'package:chat_app/Pages/editProfile.dart';
 import 'package:chat_app/Pages/searchUser.dart';
+import 'package:chat_app/Pages/signin.dart';
 import 'package:chat_app/helper/helperfunctions.dart';
 import 'package:chat_app/modal/user.dart';
 import 'package:chat_app/services/authMethods.dart';
@@ -261,7 +262,7 @@ class _ChatRoomState extends State<ChatRoom> with WidgetsBindingObserver {
                           FlatButton(
                               color: Color(0xff4081EC),
                               colorBrightness: Brightness.dark,
-                              onPressed: () {
+                              onPressed: ()async {
                                 Navigator.pop(context);
                                 final myuser =
                                     Provider.of<MyUser>(context, listen: false);
@@ -270,7 +271,8 @@ class _ChatRoomState extends State<ChatRoom> with WidgetsBindingObserver {
                                 }, myuser.userId);
                                 final auth = Provider.of<AuthMethods>(context,
                                     listen: false);
-                                auth.signOut();
+                               auth.signOut();
+                               Navigator.pushAndRemoveUntil(context, MaterialPageRoute(builder: (context)=> SignIn()), (route) => false);
                               },
                               child: Text("Log Out"))
                         ],

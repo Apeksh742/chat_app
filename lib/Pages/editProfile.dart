@@ -29,6 +29,7 @@ class _EditProfileState extends State<EditProfile> {
   String stateValue = "";
   String cityValue = "";
   String address = "";
+  bool isLoading = false;
   List<Media> pickedFile;
   String dateOfBirth;
   User currentUser = FirebaseAuth.instance.currentUser;
@@ -43,18 +44,18 @@ class _EditProfileState extends State<EditProfile> {
     database.updateProfilePicture({"profileURL": imageURL}, currentUser.uid);
   }
 
-  Future<void> _selectDate(BuildContext context) async {
-    final DateTime picked = await showDatePicker(
-        context: context,
-        initialDate: selectedDate,
-        firstDate: DateTime(1920, 1),
-        lastDate: DateTime.now());
-    if (picked != null && picked != selectedDate)
-      setState(() {
-        selectedDate = picked;
-        dateOfBirth = selectedDate.toLocal().toString();
-      });
-  }
+  // Future<void> _selectDate(BuildContext context) async {
+  //   final DateTime picked = await showDatePicker(
+  //       context: context,
+  //       initialDate: selectedDate,
+  //       firstDate: DateTime(1920, 1),
+  //       lastDate: DateTime.now());
+  //   if (picked != null && picked != selectedDate)
+  //     setState(() {
+  //       selectedDate = picked;
+  //       dateOfBirth = selectedDate.toLocal().toString();
+  //     });
+  // }
 
   Future<String> uploadFile(File _image, BuildContext context) async {
     String downloadURL;
@@ -142,7 +143,7 @@ class _EditProfileState extends State<EditProfile> {
   Widget build(BuildContext context) {
     final _width = MediaQuery.of(context).size.width;
     final _height = MediaQuery.of(context).size.height;
-    
+    // final userInfo = Provider.of<MyUser>(context);
     // devlog.log(_image.toString());
     return Scaffold(
       appBar: AppBar(
@@ -164,16 +165,32 @@ class _EditProfileState extends State<EditProfile> {
             padding: const EdgeInsets.only(right: 16),
             child: InkWell(
                 onTap: () async {
+                  
                   if (_image != null) {
+                    setState(() {
+                      isLoading = true;
+                    });
+                    // await Future.delayed(Duration(seconds: 2));
                     await saveImages(_image, context);
-                    
+                    setState(() {
+                      isLoading = false;
+                    });
                   }
                   final snackBar = SnackBar(
                     content: const Text('Profile Updated Succesfully'),
                   );
                   ScaffoldMessenger.of(context).showSnackBar(snackBar);
                 },
-                child: Icon(Icons.check, color: Colors.black)),
+                child: isLoading
+                    ? Center(
+                        child: SizedBox(
+                          height: 30,
+                          width: 30,
+                          child: LoadingIndicator(
+                              indicatorType: Indicator.circleStrokeSpin),
+                        ),
+                      )
+                    : Icon(Icons.check, color: Colors.black)),
           )
         ],
       ),
@@ -332,6 +349,9 @@ class _EditProfileState extends State<EditProfile> {
                           SizedBox(
                             height: _height * 0.02,
                           ),
+                          // Consumer<MyUser>(
+                          //     builder: (ctx, usermodel, child) =>
+                          //         Text(usermodel.profileURL)),
                           // Container(
                           //   child: Column(
                           //     crossAxisAlignment: CrossAxisAlignment.start,

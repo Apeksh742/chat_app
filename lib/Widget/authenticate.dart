@@ -33,6 +33,7 @@ class Authenticate extends StatelessWidget {
             // Future.delayed(Duration(seconds: 10));
             return SplashScreen();
           } else {
+            log("User Log out");
             return SignIn();
           }
         });

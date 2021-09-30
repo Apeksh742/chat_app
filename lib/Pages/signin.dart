@@ -6,9 +6,13 @@ import 'package:chat_app/helper/helperfunctions.dart';
 import 'package:chat_app/modal/user.dart';
 import 'package:chat_app/services/authMethods.dart';
 import 'package:chat_app/services/databasemethod.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:flutter/services.dart';
+
+import 'chatRoomScreen.dart';
 
 class SignIn extends StatefulWidget {
   @override
@@ -21,6 +25,7 @@ class _SignInState extends State<SignIn> {
   TextEditingController passwordController = TextEditingController();
   DatabaseMethods databaseMethods = DatabaseMethods();
   final formKey = GlobalKey<FormState>();
+  User currentUser;
 
   Future<String> getUserName(String email) async {
     try {
@@ -39,6 +44,8 @@ class _SignInState extends State<SignIn> {
     // HelperFunctions.saveUserNameSharedPreference(username)
   }
 
+  Future updateUserDetails() async {}
+
   signIn() async {
     if (formKey.currentState.validate()) {
       setState(() {
@@ -55,7 +62,8 @@ class _SignInState extends State<SignIn> {
         log("User Present");
         await HelperFunctions.saveUserNameSharedPreference(username);
         final auth = Provider.of<AuthMethods>(context, listen: false);
-        auth
+
+        await auth
             .signInWithEmailAndPassword(
                 emailController.text, passwordController.text)
             .then((value) {
@@ -84,8 +92,26 @@ class _SignInState extends State<SignIn> {
                     ],
                   );
                 });
-          } else {}
+          } else {
+            currentUser = value;
+          }
         });
+        final userProvider = Provider.of<MyUser>(context, listen: false);
+
+        myuser.upDateUser(
+            userId: currentUser.uid,
+            email: currentUser.email,
+            username: currentUser.displayName);
+        final QuerySnapshot data =
+            await databaseMethods.findUserByEmail(currentUser.email);
+        myuser.upDateUser(
+            userId: currentUser.uid,
+            email: currentUser.email,
+            username: currentUser.displayName,
+            profileURL: data.docs.first.get("profileURL") ?? null);
+        print('update User successfully');
+        Navigator.pushAndRemoveUntil(context,
+            MaterialPageRoute(builder: (ctx) => ChatRoom()), (route) => false);
       } else {
         log("User Absent");
         showDialog(
