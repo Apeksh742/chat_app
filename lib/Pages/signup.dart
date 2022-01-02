@@ -6,8 +6,10 @@ import 'package:chat_app/Pages/signin.dart';
 import 'package:chat_app/Widget/widget.dart';
 import 'package:chat_app/helper/helperfunctions.dart';
 import 'package:chat_app/modal/user.dart';
+import 'package:chat_app/modal/utilities.dart';
 import 'package:chat_app/services/authMethods.dart';
 import 'package:chat_app/services/databasemethod.dart';
+import 'package:firebase_dynamic_links/firebase_dynamic_links.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:flutter/services.dart';
@@ -23,32 +25,60 @@ class _SignUpState extends State<SignUp> {
   TextEditingController usernameController = TextEditingController();
   TextEditingController emailController = TextEditingController();
   TextEditingController passwordController = TextEditingController();
+  TextEditingController referController = TextEditingController();
   DatabaseMethods database = DatabaseMethods();
+  // String temp = "Link";
+
+  @override
+  void initState() {
+    super.initState();
+    // checkReferalCode();
+  }
+
+  // checkReferalCode() {
+  //   final PendingDynamicLinkData initialLink =
+  //       Provider.of<Utilities>(context, listen: false).referralLink;
+  //   if (initialLink != null) {
+  //     final Uri deepLink = initialLink.link;
+  //     final queryParams = deepLink.queryParameters;
+  //     if (queryParams.length > 0) {
+  //       String referCode = queryParams['code'];
+  //       setState(() { 
+  //         referController.text = referCode;
+  //       });
+  //     }
+  //   }
+  // }
 
   validateUserInfo() async {
     if (formKey.currentState.validate()) {
       final String username = usernameController.text;
-      
+
       final auth = Provider.of<AuthMethods>(context, listen: false);
       try {
         setState(() {
           if (mounted) isLoading = true;
         });
-       await auth
+        await auth
             .signUpWithEmailAndPassword(
                 emailController.text, passwordController.text)
-            .then((user)async {
+            .then((user) async {
           if (user != null) {
             log("User created Succesfully");
             final userProvider = Provider.of<MyUser>(context, listen: false);
-            userProvider.upDateUser(userId: user.uid, username: usernameController.text, email: emailController.text);
+            userProvider.upDateUser(
+                userId: user.uid,
+                username: usernameController.text,
+                email: emailController.text);
             user.updateDisplayName(username);
-             HelperFunctions.saveUserEmailSharedPreference(emailController.text);
-             HelperFunctions.saveUserNameSharedPreference(usernameController.text);
+            HelperFunctions.saveUserEmailSharedPreference(emailController.text);
+            HelperFunctions.saveUserNameSharedPreference(
+                usernameController.text);
             // setState(() {
             //   if (mounted) isLoading = false;
             // });
-            Navigator.pushReplacement(context, MaterialPageRoute(builder: (context)=> RegisterProfile()));
+            Navigator.pushReplacement(context,
+                MaterialPageRoute(builder: (context) => RegisterProfile()));
             Map<String, dynamic> userInfo = {
               "Username": usernameController.text,
               "Email": user.email,
@@ -83,8 +113,7 @@ class _SignUpState extends State<SignUp> {
                   );
                 });
           }
-        }
-        );
+        });
       } on Exception catch (e) {
         setState(() {
           if (mounted) isLoading = false;
@@ -99,6 +128,7 @@ class _SignUpState extends State<SignUp> {
     usernameController.dispose();
     emailController.dispose();
     passwordController.dispose();
+    referController.dispose();
     super.dispose();
   }
 
@@ -146,6 +176,49 @@ class _SignUpState extends State<SignUp> {
                             hinttext: "Password",
                             obscurity: true,
                             icon: Icon(Icons.lock_open_outlined)),
+                        SizedBox(
+                          height: 20,
+                        ),
+                        Consumer<Utilities>(builder: (context, util, child) {
+                          if (referController.text !=
+                              util.referCode && util.referralLink!=null) {   
+                            referController.text =
+                                util.referCode;
+                          }
+                          return TextField(
+                            controller: referController,
+                            onChanged: (value) {
+                              // Refer code logic
+                            },
+                            decoration: InputDecoration(
+                                labelText: "Refer code",
+                                hintText: "Refer Code",
+                                border: OutlineInputBorder(
+                                    borderRadius: BorderRadius.circular(20))),
+                          );
+                        }),
+                        // TextField(
+                        //   controller: referController,
+                        //   onChanged: (value) {
+                        //     // Refer code logic
+                        //   },
+                        //   decoration: InputDecoration(
+                        //       labelText: "Refer code",
+                        //       hintText: "Refer Code",
+                        //       border: OutlineInputBorder(
+                        //           borderRadius: BorderRadius.circular(20))),
+                        // ),
+                        SizedBox(
+                          height: 20,
+                        ),
+                        // Consumer<Utilities>(builder: (context, util, child) {
+                        //   return Text(util.referralCode.toString(),
+                        //       style: TextStyle(
+                        //           color: Color(0xff9A88ED), fontSize: 15));
+                        // })
+                        // SizedBox(
+                        //     width: double.infinity * 0.8,
+                        //     child: Center(child: Text(temp)))
                       ],
                     ),
                   ),

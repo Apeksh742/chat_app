@@ -28,7 +28,9 @@ dependencies:
   csc_picker: 
   cupertino_icons: 
   firebase_auth: 
-  firebase_core: 
+  firebase_core:
+  firebase_dynamic_links:
+  share_plus:
   firebase_messaging: 
   flutter_local_notifications: 
   firebase_database: 

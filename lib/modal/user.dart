@@ -6,6 +6,7 @@ class MyUser extends ChangeNotifier {
   String username;
   String dob;
   String profileURL;
+  
 
   upDateUser(
       {String userId, String email, String username, String profileURL}) {
