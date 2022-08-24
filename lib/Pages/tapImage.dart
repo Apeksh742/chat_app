@@ -19,8 +19,9 @@ class TapImage extends StatelessWidget {
                                   width: 100,
                                   child: Center(
                                       child: LoadingIndicator(
-                                    indicatorType: Indicator.circleStrokeSpin,
-                                    color: Colors.green,
+                                     indicatorType: Indicator.circleStrokeSpin,
+                                    
+                                    colors: [Colors.green],
                                   ))),
                               imageUrl: downloadUrl
             // child: Image.network(downloadUrl)

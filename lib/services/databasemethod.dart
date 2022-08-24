@@ -17,18 +17,17 @@ class DatabaseMethods {
   // }
 
   Future<QuerySnapshot> findUserByEmail(String email) async {
-   try{
+    try {
       return await FirebaseFirestore.instance
-        .collection("Users")
-        .where("Email", isEqualTo: email)
-        .get()
-        .catchError((e) {
+          .collection("Users")
+          .where("Email", isEqualTo: email)
+          .get()
+          .catchError((e) {
+        print(e.toString());
+      });
+    } catch (e) {
       print(e.toString());
-    });
-   }
-   catch(e){
-     print(e.toString());
-   }
+    }
   }
 
   Future<QuerySnapshot> findUser(String username) async {
@@ -121,11 +120,27 @@ class DatabaseMethods {
           .doc(element.id)
           .update(status);
     });
-
-    // FirebaseFirestore.instance.collection("Users").doc(docid).set(status);
   }
 
-  Future updateProfilePicture(Map<String, dynamic> profileLink , String uid) async {
+  Future changeCurrentUserData(Map<String, dynamic> data, String uid) async {
+    QuerySnapshot document = await FirebaseFirestore.instance
+        .collection("Users")
+        .where("uid", isEqualTo: uid)
+        .limit(1)
+        .get();
+    document.docs.forEach((element) {
+      log(element.id);
+      FirebaseFirestore.instance
+          .collection("Users")
+          .doc(element.id)
+          .update(data);
+    });
+  }
+
+  
+
+  Future updateProfilePicture(
+      Map<String, dynamic> profileLink, String uid) async {
     QuerySnapshot document = await FirebaseFirestore.instance
         .collection("Users")
         .where("uid", isEqualTo: uid)
@@ -140,9 +155,13 @@ class DatabaseMethods {
     });
   }
 
-  Stream checkUserStatus(String receiverName){
-   return FirebaseFirestore.instance.collection("Users").where("Username",isEqualTo: receiverName ).limit(1).get().asStream();
-   
+  Stream checkUserStatus(String receiverName) {
+    return FirebaseFirestore.instance
+        .collection("Users")
+        .where("Username", isEqualTo: receiverName)
+        .limit(1)
+        .get()
+        .asStream();
   }
 
   Future findUserbyUsername(String receiverName) {

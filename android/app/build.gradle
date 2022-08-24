@@ -40,7 +40,7 @@ android {
         // TODO: Specify your own unique Application ID (https://developer.android.com/studio/build/application-id.html).
         applicationId "com.apeksh.chat_app"
         multiDexEnabled true
-        compileSdkVersion 28
+        compileSdkVersion 31
         minSdkVersion 23
         buildToolsVersion "25.0.0"
         versionCode flutterVersionCode.toInteger()

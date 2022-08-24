@@ -8,6 +8,7 @@ import 'package:chat_app/helper/helperfunctions.dart';
 import 'package:chat_app/modal/user.dart';
 import 'package:chat_app/services/authMethods.dart';
 import 'package:chat_app/services/databasemethod.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:flutter/services.dart';
@@ -27,69 +28,104 @@ class _SignUpState extends State<SignUp> {
 
   validateUserInfo() async {
     if (formKey.currentState.validate()) {
+      setState(() {
+        if (mounted) isLoading = true;
+      });
       final String username = usernameController.text;
-      
-      final auth = Provider.of<AuthMethods>(context, listen: false);
-      try {
+      final QuerySnapshot querySnapshot = await database.findUser(username);
+      if (querySnapshot.docs.length > 0) {
         setState(() {
-          if (mounted) isLoading = true;
+          isLoading = false;
         });
-       await auth
-            .signUpWithEmailAndPassword(
-                emailController.text, passwordController.text)
-            .then((user)async {
-          if (user != null) {
-            log("User created Succesfully");
-            final userProvider = Provider.of<MyUser>(context, listen: false);
-            userProvider.upDateUser(userId: user.uid, username: usernameController.text, email: emailController.text);
-            user.updateDisplayName(username);
-             HelperFunctions.saveUserEmailSharedPreference(emailController.text);
-             HelperFunctions.saveUserNameSharedPreference(usernameController.text);
-            // setState(() {
-            //   if (mounted) isLoading = false;
-            // });
-            Navigator.pushReplacement(context, MaterialPageRoute(builder: (context)=> RegisterProfile()));
-            Map<String, dynamic> userInfo = {
-              "Username": usernameController.text,
-              "Email": user.email,
-              "uid": user.uid,
-              "status": true,
-            };
-            // print("Firebase Username updated : ${user.displayName}");
-            database.uploadData(userInfo);
-          }
-          if (user == null) {
-            setState(() {
-              isLoading = false;
+        showDialog(
+            context: context,
+            builder: (BuildContext context) {
+              return AlertDialog(
+                title: Text(
+                  "Error",
+                  style: TextStyle(color: Colors.red),
+                ),
+                content:
+                    Text("Username already in use. Please try another one"),
+                actions: <Widget>[
+                  FlatButton(
+                      color: Color(0xff4081EC),
+                      colorBrightness: Brightness.dark,
+                      onPressed: () {
+                        Navigator.of(context).pop();
+                      },
+                      child: Text("Close"))
+                ],
+              );
             });
-            showDialog(
-                context: context,
-                builder: (BuildContext context) {
-                  return AlertDialog(
-                    title: Text(
-                      "Error",
-                      style: TextStyle(color: Colors.red),
-                    ),
-                    content: Text("Email lready in use"),
-                    actions: <Widget>[
-                      FlatButton(
-                          color: Color(0xff4081EC),
-                          colorBrightness: Brightness.dark,
-                          onPressed: () {
-                            Navigator.of(context).pop();
-                          },
-                          child: Text("Close"))
-                    ],
-                  );
-                });
-          }
+      } else {
+        final auth = Provider.of<AuthMethods>(context, listen: false);
+        try {
+          setState(() {
+            if (mounted) isLoading = true;
+          });
+          await auth
+              .signUpWithEmailAndPassword(
+                  emailController.text, passwordController.text)
+              .then((user) async {
+            if (user != null) {
+              log("User created Succesfully");
+              final userProvider = Provider.of<MyUser>(context, listen: false);
+              userProvider.upDateUser(
+                  userId: user.uid,
+                  username: usernameController.text,
+                  email: emailController.text);
+              user.updateDisplayName(username);
+              HelperFunctions.saveUserEmailSharedPreference(
+                  emailController.text);
+              HelperFunctions.saveUserNameSharedPreference(
+                  usernameController.text);
+              // setState(() {
+              //   if (mounted) isLoading = false;
+              // });
+              Navigator.pushReplacement(context,
+                  MaterialPageRoute(builder: (context) => RegisterProfile()));
+              Map<String, dynamic> userInfo = {
+                "Username": usernameController.text,
+                "Email": user.email,
+                "uid": user.uid,
+                "status": true,
+              };
+              // print("Firebase Username updated : ${user.displayName}");
+              database.uploadData(userInfo);
+            }
+            if (user == null) {
+              setState(() {
+                isLoading = false;
+              });
+              showDialog(
+                  context: context,
+                  builder: (BuildContext context) {
+                    return AlertDialog(
+                      title: Text(
+                        "Error",
+                        style: TextStyle(color: Colors.red),
+                      ),
+                      content: Text("Email lready in use"),
+                      actions: <Widget>[
+                        FlatButton(
+                            color: Color(0xff4081EC),
+                            colorBrightness: Brightness.dark,
+                            onPressed: () {
+                              Navigator.of(context).pop();
+                            },
+                            child: Text("Close"))
+                      ],
+                    );
+                  });
+            }
+          });
+        } on Exception catch (e) {
+          setState(() {
+            if (mounted) isLoading = false;
+          });
+          print(e.toString());
         }
-        );
-      } on Exception catch (e) {
-        setState(() {
-          if (mounted) isLoading = false;
-        });
-        print(e.toString());
       }
     }
   }

@@ -8,6 +8,7 @@ import 'package:chat_app/modal/user.dart';
 import 'package:chat_app/services/databasemethod.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
@@ -21,11 +22,17 @@ class SplashScreen extends StatefulWidget {
 class _SplashScreenState extends State<SplashScreen> {
   final DatabaseMethods databaseMethods = DatabaseMethods();
   User currentUser;
+  String fcmToken;
   @override
   void initState() {
     currentUser = FirebaseAuth.instance.currentUser;
-    getCurrentUser();
+    _getTokenAndCurrentUser();
     super.initState();
+  }
+  _getTokenAndCurrentUser() async {
+    fcmToken = await FirebaseMessaging.instance.getToken();
+    log("FCM Token: " + fcmToken);
+    getCurrentUser();
   }
 
   Future getCurrentUser() async {
@@ -43,12 +50,17 @@ class _SplashScreenState extends State<SplashScreen> {
         await databaseMethods.findUserByEmail(currentUser.email);
     developerlog.log(currentUser.uid.toString());
     
-    developerlog.log(data.docs.first.get("profileURL").toString());
+    // developerlog.log(data.docs.first.get("profileURL").toString());
+    databaseMethods.changeCurrentUserData({
+      "fcmToken": fcmToken,
+    }, currentUser.uid);
+   Map<String,dynamic> dataUser = data.docs.first.data();
     myuser.upDateUser(
         userId: currentUser.uid,
         email: currentUser.email,
         username: currentUser.displayName,
-        profileURL: data.docs.first.get("profileURL") ?? null);
+        fcmToken: fcmToken,
+        profileURL: dataUser["profileURL"]);
     print('update User successfully');
     Navigator.pushAndRemoveUntil(context, MaterialPageRoute(builder: (ctx)=> ChatRoom()), (route) => false);
     }

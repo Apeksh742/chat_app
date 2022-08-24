@@ -6,13 +6,19 @@ class MyUser extends ChangeNotifier {
   String username;
   String dob;
   String profileURL;
+  String fcmToken;
 
   upDateUser(
-      {String userId, String email, String username, String profileURL}) {
+      {String userId,
+      String email,
+      String username,
+      String profileURL,
+      String fcmToken}) {
     this.userId = userId;
     this.email = email;
     this.username = username;
     this.profileURL = profileURL;
+    this.fcmToken = fcmToken;
   }
 
   updateProfile({String profileURL}) {

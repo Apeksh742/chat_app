@@ -30,6 +30,7 @@ dependencies:
   firebase_auth: 
   firebase_core: 
   firebase_messaging: 
+  cloud_functions:
   flutter_local_notifications: 
   firebase_database: 
   firebase_storage: 
@@ -40,12 +41,21 @@ dependencies:
   provider: 
   shared_preferences: 
   images_picker: 
+  http:
   grouped_list: ^4.1.0
+  flutter_svg: 
 
 dev_dependencies:
   flutter_test:
     sdk: flutter
+  flutter_launcher_icons: ^0.10.0
 
+flutter_icons:
+  android: true
+  ios: true
+  image_path: "assets/logos/myChatLogo.png"
+  
+  
 # For information on the generic Dart part of this file, see the
 # following page: https://dart.dev/tools/pub/pubspec
 # The following section is specific to Flutter.

@@ -38,6 +38,13 @@ class _EditProfileState extends State<EditProfile> {
       firebase_storage.FirebaseStorage.instance;
   FirebaseFirestore firestoreInstance = FirebaseFirestore.instance;
 
+  @override
+  void didChangeDependencies() {
+    devlog.log("Did change dependencies called");
+
+    super.didChangeDependencies();
+  }
+
   Future<void> saveImages(File _image, BuildContext context) async {
     String imageURL = await uploadFile(_image, context);
 

@@ -152,7 +152,7 @@ class _ConversationScreenState extends State<ConversationScreen> {
                       child: Center(
                           child: LoadingIndicator(
                         indicatorType: Indicator.circleStrokeSpin,
-                        color: Colors.green,
+                        colors: [Colors.green],
                       ))),
                   imageUrl: message.message),
             )),
@@ -225,7 +225,8 @@ class _ConversationScreenState extends State<ConversationScreen> {
         "sentBy": user.displayName,
         "created": FieldValue.serverTimestamp(),
         "isPhoto": isPhoto,
-        "users": [widget.receiverName, user.displayName]
+        "users": [widget.receiverName, user.displayName],
+        "senderId": user.uid,
       };
       DatabaseMethods().sendMessage(chatRoomId, messageMap);
     }

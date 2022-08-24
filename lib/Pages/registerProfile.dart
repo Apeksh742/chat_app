@@ -172,18 +172,26 @@ class _RegisterProfileState extends State<RegisterProfile> {
                     setState(() {
                       isLoading = false;
                     });
-                    Navigator.pushAndRemoveUntil(
-                        context,
-                        MaterialPageRoute(builder: (context) => ChatRoom()),
-                        (route) => false);
-
                     final snackBar = SnackBar(
                       content: const Text('Profile Updated Succesfully'),
                     );
                     ScaffoldMessenger.of(context).showSnackBar(snackBar);
                   }
+                  Navigator.pushAndRemoveUntil(
+                      context,
+                      MaterialPageRoute(builder: (context) => ChatRoom()),
+                      (route) => false);
                 },
-                child: Icon(Icons.check, color: Colors.black)),
+                child: isLoading
+                    ? Center(
+                        child: SizedBox(
+                          height: 30,
+                          width: 30,
+                          child: LoadingIndicator(
+                              indicatorType: Indicator.circleStrokeSpin),
+                        ),
+                      )
+                    : Icon(Icons.check, color: Colors.black)),
           )
         ],
       ),
@@ -214,7 +222,8 @@ class _RegisterProfileState extends State<RegisterProfile> {
                                       backgroundImage: _image != null
                                           ? FileImage(_image)
                                           : NetworkImage(
-                                              "https://www.vippng.com/png/detail/416-4161690_empty-profile-picture-blank-avatar-image-circle.png"),
+                                              "https://www.vippng.com/png/detail/416-4161690_empty-profile-picture-blank-avatar-image-circle.png",
+                                            ),
                                     ),
                                     SizedBox(
                                       height: _height * 0.02,
