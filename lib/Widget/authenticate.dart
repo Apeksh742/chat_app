@@ -7,6 +7,7 @@ import 'package:chat_app/modal/notificationModel.dart';
 import 'package:chat_app/modal/user.dart';
 import 'package:chat_app/services/authMethods.dart';
 import 'package:chat_app/services/databasemethod.dart';
+import 'package:chat_app/services/utilities.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
@@ -73,6 +74,7 @@ class _AuthenticateState extends State<Authenticate> {
     return StreamBuilder<User>(
         stream: FirebaseAuth.instance.authStateChanges(),
         builder: (context, snapshot) {
+          Provider.of<Utilities>(context, listen: false).subsribeSream();
           if (snapshot.connectionState != ConnectionState.active) {
             return Scaffold(body: Center(child: CircularProgressIndicator()));
           }

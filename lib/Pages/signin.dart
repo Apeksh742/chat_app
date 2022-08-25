@@ -76,7 +76,7 @@ class _SignInState extends State<SignIn> {
                 builder: (BuildContext context) {
                   return AlertDialog(
                     title: Text(
-                      "",
+                      "Error",
                       style: TextStyle(color: Colors.red),
                     ),
                     content: Text(

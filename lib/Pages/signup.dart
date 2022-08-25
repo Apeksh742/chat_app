@@ -8,6 +8,7 @@ import 'package:chat_app/helper/helperfunctions.dart';
 import 'package:chat_app/modal/user.dart';
 import 'package:chat_app/services/authMethods.dart';
 import 'package:chat_app/services/databasemethod.dart';
+import 'package:chat_app/services/utilities.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
@@ -24,6 +25,7 @@ class _SignUpState extends State<SignUp> {
   TextEditingController usernameController = TextEditingController();
   TextEditingController emailController = TextEditingController();
   TextEditingController passwordController = TextEditingController();
+  TextEditingController referController = TextEditingController();
   DatabaseMethods database = DatabaseMethods();
 
   validateUserInfo() async {
@@ -182,6 +184,29 @@ class _SignUpState extends State<SignUp> {
                             hinttext: "Password",
                             obscurity: true,
                             icon: Icon(Icons.lock_open_outlined)),
+                             SizedBox(
+                          height: 20,
+                        ),
+                        Consumer<Utilities>(builder: (context, util, child) {
+                          if (referController.text != util.referCode &&
+                              util.referralLink != null) {
+                            referController.text = util.referCode;
+                          }
+                          return TextField(
+                            controller: referController,
+                            onChanged: (value) {
+                              // Refer code logic
+                            },
+                            decoration: InputDecoration(
+                                labelText: "Refer code",
+                                hintText: "Refer Code",
+                                border: OutlineInputBorder(
+                                    borderRadius: BorderRadius.circular(20))),
+                          );
+                        }),
+                         SizedBox(
+                          height: 20,
+                        ),
                       ],
                     ),
                   ),

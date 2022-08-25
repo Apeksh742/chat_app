@@ -6,6 +6,7 @@ import 'package:cached_network_image/cached_network_image.dart';
 import 'package:chat_app/services/databasemethod.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:firebase_dynamic_links/firebase_dynamic_links.dart';
 import 'package:images_picker/images_picker.dart';
 import 'package:chat_app/modal/user.dart';
 import 'package:flutter/material.dart';
@@ -14,6 +15,7 @@ import 'package:loading_indicator/loading_indicator.dart';
 import 'package:provider/provider.dart';
 import 'package:firebase_storage/firebase_storage.dart' as firebase_storage;
 import 'package:path/path.dart';
+import 'package:share_plus/share_plus.dart';
 
 class EditProfile extends StatefulWidget {
   const EditProfile({Key key}) : super(key: key);
@@ -172,7 +174,6 @@ class _EditProfileState extends State<EditProfile> {
             padding: const EdgeInsets.only(right: 16),
             child: InkWell(
                 onTap: () async {
-                  
                   if (_image != null) {
                     setState(() {
                       isLoading = true;
@@ -355,6 +356,54 @@ class _EditProfileState extends State<EditProfile> {
                           ),
                           SizedBox(
                             height: _height * 0.02,
+                          ),
+                          Center(
+                            child: InkWell(
+                              onTap: () async {
+                                final DynamicLinkParameters parameters =
+                                    DynamicLinkParameters(
+                                        // The Dynamic Link URI domain. You can view created URIs on your Firebase console
+                                        uriPrefix: 'https://chtap.page.link',
+                                        // The deep Link passed to your application which you can use to affect change
+                                        link: Uri.parse(
+                                            'https://www.example.com/view-to-open?code=${FirebaseAuth.instance.currentUser.uid.substring(0, 4)}'),
+                                        // Android application details needed for opening correct app on device/Play Store
+                                        androidParameters:
+                                            const AndroidParameters(
+                                          packageName: "com.apeksh.chat_app",
+                                          minimumVersion: 1,
+                                        ),
+                                        socialMetaTagParameters:
+                                            SocialMetaTagParameters(
+                                                title: "Chat App",
+                                                imageUrl: Uri.parse(
+                                                    "https://cutt.ly/BXKl8c0"),
+                                                description:
+                                                    "Join me in this chat app"));
+                                final ShortDynamicLink shortDynamicLink =
+                                    await FirebaseDynamicLinks.instance
+                                        .buildShortLink(parameters);
+                                final Uri uri = shortDynamicLink.shortUrl;
+                                Share.share(
+                                    "Hey, I'm using ChatApp to chat. Join me using this link: ${uri.toString()}");
+                                // devlog.log(
+                                //     "Deep url: ${shortDynamicLink.toString()}");
+                                devlog.log("Refer url: ${uri.toString()}");
+                                DatabaseMethods().updateProfileData(
+                                    {'referLink': uri.toString()},
+                                    FirebaseAuth.instance.currentUser.uid);
+                              },
+                              child: Container(
+                                color: Colors.blue,
+                                child: Padding(
+                                  padding: const EdgeInsets.all(8.0),
+                                  child: Text(
+                                    "Invite a friend",
+                                    style: TextStyle(color: Colors.white),
+                                  ),
+                                ),
+                              ),
+                            ),
                           ),
                           // Consumer<MyUser>(
                           //     builder: (ctx, usermodel, child) =>

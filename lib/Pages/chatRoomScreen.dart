@@ -82,7 +82,7 @@ class _ChatRoomState extends State<ChatRoom> with WidgetsBindingObserver {
           });
           LocalNotificationService.createanddisplaynotification(message);
         }
-      },
+      }, 
     );
   }
 
